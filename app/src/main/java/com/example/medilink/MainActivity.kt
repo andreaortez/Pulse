@@ -3,6 +3,7 @@ package com.example.medilink
 import android.os.Bundle
 import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
+import com.example.medilink.R.layout.login
 
 class MainActivity : AppCompatActivity() {
 
@@ -19,7 +20,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         loginButton.setOnClickListener {
-
+            setContentView(login)
         }
     }
 }
