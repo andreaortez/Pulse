@@ -1,14 +1,16 @@
 <resources>
     <string name="app_name">MediLink</string>
-    <string name="title_activity_login">Login</string>
-    <string name="prompt_email">Email</string>
-    <string name="prompt_password">Password</string>
+    <string name="title_activity_login">Iniciar Sesión</string>
+    <string name="prompt_email">Correo</string>
+    <string name="prompt_name">Nombre</string>
+    <string name="prompt_password">Contraseña</string>
     <string name="action_sign_in">Sign in or register</string>
     <string name="action_sign_in_short">Sign in</string>
-    <string name="welcome">"Welcome !"</string>
+    <string name="welcome">"¡Bienvenido!"</string>
     <string name="invalid_username">Not a valid username</string>
     <string name="invalid_password">Password must be >5 characters</string>
     <string name="login_failed">"Login failed"</string>
     <string name="title_activity_pantalla1">Pantalla1</string>
-    <string name="medilink">MEDILINK</string>
+    <string name="pulse">PULSE</string>
+    <string name="title_activity_registro">Registro</string>
 </resources>

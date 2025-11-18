@@ -6,7 +6,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/bg3"
-
     tools:context=".ui.login.Login">
 
     <LinearLayout
@@ -32,7 +31,7 @@
             android:layout_gravity="center"
             android:layout_marginTop="24dp"
             android:layout_marginBottom="24dp"
-            android:text="@string/welcome"
+            android:text="Registro"
             android:textAlignment="center"
             android:textColor="@color/azul_negro"
             android:textSize="35sp"
@@ -44,6 +43,17 @@
             android:id="@+id/username"
             android:layout_width="match_parent"
             android:layout_height="56dp"
+            android:hint="@string/prompt_name"
+            android:inputType="textEmailAddress"
+            android:selectAllOnFocus="true"
+            android:textColor="@color/gris"
+            android:textColorLink="#073770" />
+
+        <EditText
+            android:id="@+id/email"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="16dp"
             android:hint="@string/prompt_email"
             android:inputType="textEmailAddress"
             android:selectAllOnFocus="true"
@@ -63,25 +73,17 @@
             android:textColor="@color/gris"
             android:textColorLink="#073770" />
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="end"
-            android:text="¿Olvidaste tu contraseña?"
-            android:textAlignment="textEnd"
-            android:textColor="#06376F" />
-
         <Button
             android:id="@+id/login"
             android:layout_width="match_parent"
             android:layout_height="56dp"
             android:layout_marginTop="30dp"
             android:backgroundTint="#06376F"
-            android:text="Iniciar Sesión"
+            android:text="Registrarme"
             android:textColor="#FFFFFF"
             android:background="@drawable/btn_signup"/>
 
-        <!-- ¿No tienes una cuenta? Regístrate -->
+        <!-- ¿Ya tienes una cuenta? Inicia Sesión -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -92,7 +94,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="¿No tienes una cuenta? "
+                android:text="¿Ya tienes una cuenta? "
                 android:textColor="@color/gris"
                 android:textSize="14sp" />
 
@@ -100,7 +102,7 @@
                 android:id="@+id/tvIniciarSesion"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Regístraste"
+                android:text="Inicia Sesión"
                 android:textColor="@color/azul_negro"
                 android:textStyle="bold"
                 android:textSize="14sp"
@@ -108,7 +110,6 @@
                 android:focusable="true"
                 android:background="?attr/selectableItemBackground" />
         </LinearLayout>
-
 
     </LinearLayout>
 

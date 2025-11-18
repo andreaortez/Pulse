@@ -16,7 +16,7 @@ class MainActivity : AppCompatActivity() {
         val loginButton = findViewById<Button>(R.id.loginButton)
 
         registerButton.setOnClickListener {
-
+            setContentView(R.layout.registro)
         }
 
         loginButton.setOnClickListener {
