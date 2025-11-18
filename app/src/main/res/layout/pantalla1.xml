@@ -48,13 +48,11 @@
             android:id="@+id/loginButton"
             android:layout_width="match_parent"
             android:layout_height="70dp"
-            android:background="@color/white"
-            android:backgroundTint="@color/white"
+            android:background="@drawable/login_button_bg"
             android:text="Iniciar Sesión"
             android:textAllCaps="false"
             android:textColor="#0B4E99"
-            android:textSize="18sp"
-            app:cornerRadius="40dp" />
+            android:textSize="18sp" />
 
     </LinearLayout>
 
