@@ -14,8 +14,7 @@ import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.Toast
 import com.example.medilink.databinding.LoginBinding
-import android.widget.ImageButton
-import android.widget.TextView
+import com.example.medilink.ChooseUser
 import com.example.medilink.MainActivity
 
 import com.example.medilink.R
@@ -29,18 +28,12 @@ class Login : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         binding = LoginBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+        setContentView(R.layout.login)
 
         val username = binding.username
         val password = binding.password
         val login = binding.login
         val loading = binding.loading
-
-        val btnBack: ImageButton = findViewById(R.id.btnBackLogin)
-        btnBack.setOnClickListener {
-            val startPage = Intent(this, MainActivity::class.java)
-            startActivity(startPage)
-        }
 
         loginViewModel = ViewModelProvider(this, LoginViewModelFactory())
             .get(LoginViewModel::class.java)
@@ -72,6 +65,16 @@ class Login : AppCompatActivity() {
             finish()
         })
 
+    }
+
+    fun regresarInicio(view: View) {
+        val intent = Intent(this, MainActivity::class.java)
+        startActivity(intent)
+    }
+
+    fun abrirRegistro(view: View) {
+        val intent = Intent(this, ChooseUser::class.java)
+        startActivity(intent)
     }
 
     private fun updateUiWithUser(model: LoggedInUserView) {

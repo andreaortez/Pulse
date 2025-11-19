@@ -30,7 +30,8 @@
             android:textColor="@color/white"
             android:textSize="19sp"
             app:icon="@drawable/baseline_arrow_back_ios_24"
-            app:iconTint="@color/white" />
+            app:iconTint="@color/white"
+            android:onClick="regresarInicio"/>
 
     </LinearLayout>
 
@@ -143,8 +144,9 @@
                 android:clickable="true"
                 android:focusable="true"
                 android:text="Regístrate"
+                android:onClick="abrirRegistro"
                 android:background="?attr/selectableItemBackground" />
-            />
+
         </LinearLayout>
 
 

@@ -13,9 +13,10 @@ import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import com.example.medilink.ChooseUser
 import com.example.medilink.MainActivity
 import com.example.medilink.R
-import com.example.medilink.R.layout.login
+import com.example.medilink.R.layout.registro
 import com.example.medilink.R.layout.pantalla1
 import com.example.medilink.databinding.RegistroBinding
 
@@ -29,7 +30,7 @@ class Registro : AppCompatActivity() {
 
         // 1️⃣ INFLAR EL XML registro.xml
         binding = RegistroBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+        setContentView(R.layout.registro)
 
         // 2️⃣ VIEWMODEL (si lo sigues usando)
         loginViewModel = ViewModelProvider(this, LoginViewModelFactory())
@@ -62,9 +63,9 @@ class Registro : AppCompatActivity() {
 
     }
 
-    fun regresarInicio(view: View) {
-        val intent = Intent(this, MainActivity::class.java)
-        startActivity(intent)
+    fun abrirUsuario(view: View) {
+        val user = Intent(this, ChooseUser::class.java)
+        startActivity(user)
     }
 
     fun abrirLogin(view: View) {

@@ -1,9 +1,13 @@
 package com.example.medilink
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
 import com.example.medilink.R.layout.login
+import com.example.medilink.ChooseUser
+import com.example.medilink.ui.login.Login
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -16,11 +20,13 @@ class MainActivity : AppCompatActivity() {
         val loginButton = findViewById<Button>(R.id.loginButton)
 
         registerButton.setOnClickListener {
-            setContentView(R.layout.choose_user)
+            val user = Intent(this, ChooseUser::class.java)
+            startActivity(user)
         }
 
         loginButton.setOnClickListener {
-            setContentView(login)
+            val login = Intent(this, Login::class.java)
+            startActivity(login)
         }
     }
 }

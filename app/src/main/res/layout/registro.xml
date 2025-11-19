@@ -28,7 +28,7 @@
             android:textSize="19sp"
             app:icon="@drawable/baseline_arrow_back_ios_24"
             app:iconTint="@color/white"
-            android:onClick="regresarInicio"/>
+            android:onClick="abrirUsuario"/>
 
     </LinearLayout>
 

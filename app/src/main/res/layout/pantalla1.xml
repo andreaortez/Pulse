@@ -46,7 +46,7 @@
             android:textSize="20sp"
             android:backgroundTint="@android:color/transparent"/>
 
-        <!-- Iniciar sesión: pastilla blanca -->
+        <!-- Iniciar sesión: pastilla blanca-->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/loginButton"
             style="@style/Widget.Material3.Button"

@@ -93,7 +93,8 @@
                     app:iconPadding="16dp"
                     app:iconSize="90dp"
                     app:iconTint="@android:color/white"
-                    app:cornerRadius="20dp" />
+                    app:cornerRadius="20dp"
+                    android:onClick="abrirRegistro"/>
 
             </com.google.android.material.card.MaterialCardView>
 
@@ -120,7 +121,8 @@
                     app:iconPadding="16dp"
                     app:iconSize="90dp"
                     app:iconTint="@android:color/white"
-                    app:cornerRadius="20dp" />
+                    app:cornerRadius="20dp"
+                    android:onClick="abrirRegistro"/>
 
             </com.google.android.material.card.MaterialCardView>
 
