@@ -1,6 +1,7 @@
 package com.example.medilink.ui.login
 
 import android.app.Activity
+import android.content.Intent
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import android.os.Bundle
@@ -14,6 +15,8 @@ import android.widget.EditText
 import android.widget.Toast
 import com.example.medilink.databinding.LoginBinding
 import android.widget.ImageButton
+import android.widget.TextView
+import com.example.medilink.MainActivity
 
 import com.example.medilink.R
 
@@ -35,7 +38,8 @@ class Login : AppCompatActivity() {
 
         val btnBack: ImageButton = findViewById(R.id.btnBackLogin)
         btnBack.setOnClickListener {
-            finish()
+            val startPage = Intent(this, MainActivity::class.java)
+            startActivity(startPage)
         }
 
         loginViewModel = ViewModelProvider(this, LoginViewModelFactory())
@@ -48,10 +52,7 @@ class Login : AppCompatActivity() {
             login.isEnabled = loginState.isDataValid
 
             if (loginState.usernameError != null) {
-                username.error = getString(loginState.usernameError)
-            }
-            if (loginState.passwordError != null) {
-                password.error = getString(loginState.passwordError)
+                username?.error = getString(loginState.usernameError)
             }
         })
 
@@ -71,37 +72,6 @@ class Login : AppCompatActivity() {
             finish()
         })
 
-        username.afterTextChanged {
-            loginViewModel.loginDataChanged(
-                username.text.toString(),
-                password.text.toString()
-            )
-        }
-
-        password.apply {
-            afterTextChanged {
-                loginViewModel.loginDataChanged(
-                    username.text.toString(),
-                    password.text.toString()
-                )
-            }
-
-            setOnEditorActionListener { _, actionId, _ ->
-                when (actionId) {
-                    EditorInfo.IME_ACTION_DONE ->
-                        loginViewModel.login(
-                            username.text.toString(),
-                            password.text.toString()
-                        )
-                }
-                false
-            }
-
-            login.setOnClickListener {
-                loading.visibility = View.VISIBLE
-                loginViewModel.login(username.text.toString(), password.text.toString())
-            }
-        }
     }
 
     private fun updateUiWithUser(model: LoggedInUserView) {

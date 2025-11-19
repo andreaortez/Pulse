@@ -14,4 +14,5 @@
     <string name="title_activity_pantalla1">Pantalla1</string>
     <string name="pulse">PULSE</string>
     <string name="title_activity_registro">Registro</string>
+    <string name="title_activity_choose_user">ChooseUser</string>
 </resources>

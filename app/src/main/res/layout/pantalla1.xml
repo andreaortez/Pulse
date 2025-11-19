@@ -33,26 +33,33 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">
 
-        <Button
+        <!-- Registrarse -->
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/registerButton"
             style="@style/Widget.Material3.Button"
-            android:layout_width="208dp"
-            android:layout_height="70dp"
+            android:layout_width="0dp"
+            android:layout_height="80dp"
+            android:layout_weight="1"
             android:text="Registrarse"
             android:textAllCaps="false"
-            android:textColor="@color/white"
-            android:textSize="18sp"
-            app:cornerRadius="12dp" />
+            android:textColor="@android:color/white"
+            android:textSize="20sp"
+            android:backgroundTint="@android:color/transparent"/>
 
-        <Button
+        <!-- Iniciar sesión: pastilla blanca -->
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/loginButton"
-            android:layout_width="match_parent"
-            android:layout_height="70dp"
-            android:background="@drawable/login_button_bg"
+            style="@style/Widget.Material3.Button"
+            android:layout_width="0dp"
+            android:layout_height="80dp"
+            android:layout_weight="1"
             android:text="Iniciar Sesión"
             android:textAllCaps="false"
-            android:textColor="#0B4E99"
-            android:textSize="18sp" />
+            android:textSize="20sp"
+            android:textColor="@color/azul_negro"
+            android:backgroundTint="@android:color/white"
+            android:layout_marginStart="8dp"
+            app:shapeAppearanceOverlay="@style/LeftRoundedButton" />
 
     </LinearLayout>
 
