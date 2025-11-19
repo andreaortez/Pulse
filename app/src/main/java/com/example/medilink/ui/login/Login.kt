@@ -13,6 +13,7 @@ import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.Toast
 import com.example.medilink.databinding.LoginBinding
+import android.widget.ImageButton
 
 import com.example.medilink.R
 
@@ -31,6 +32,11 @@ class Login : AppCompatActivity() {
         val password = binding.password
         val login = binding.login
         val loading = binding.loading
+
+        val btnBack: ImageButton = findViewById(R.id.btnBackLogin)
+        btnBack.setOnClickListener {
+            finish()
+        }
 
         loginViewModel = ViewModelProvider(this, LoginViewModelFactory())
             .get(LoginViewModel::class.java)

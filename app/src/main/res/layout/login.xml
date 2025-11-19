@@ -6,13 +6,43 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/bg3"
-
     tools:context=".ui.login.Login">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="40dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:clickable="true"
+        android:focusable="true"
+        android:background="?attr/selectableItemBackground"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageButton
+            android:id="@+id/btnBackLogin"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/baseline_arrow_back_ios_24"
+            android:contentDescription="Regresar" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Regresar"
+            android:textColor="@color/white"
+            android:textSize="16sp"
+            android:layout_marginEnd="8dp" />
+
+    </LinearLayout>
 
     <LinearLayout
         android:id="@+id/loginCard"
         android:layout_width="match_parent"
-        android:layout_height="579dp"
+        android:layout_height="match_parent"
         android:layout_marginTop="150dp"
         android:background="@drawable/login_card_bg"
         android:orientation="vertical"
@@ -30,8 +60,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:layout_marginTop="24dp"
-            android:layout_marginBottom="24dp"
+            android:layout_marginTop="50dp"
+            android:layout_marginBottom="40dp"
             android:text="@string/welcome"
             android:textAlignment="center"
             android:textColor="@color/azul_negro"
@@ -54,7 +84,7 @@
             android:id="@+id/password"
             android:layout_width="match_parent"
             android:layout_height="56dp"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="20dp"
             android:hint="Contraseña"
             android:imeActionLabel="@string/action_sign_in_short"
             android:imeOptions="actionDone"
@@ -75,7 +105,7 @@
             android:id="@+id/login"
             android:layout_width="match_parent"
             android:layout_height="56dp"
-            android:layout_marginTop="30dp"
+            android:layout_marginTop="40dp"
             android:backgroundTint="#06376F"
             android:text="Iniciar Sesión"
             android:textColor="#FFFFFF"
