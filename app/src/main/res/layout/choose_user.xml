@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg3">
+
+    <LinearLayout
+        android:id="@+id/btnBackRegistroLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="10dp"
+        android:background="?attr/selectableItemBackground"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnBackRegistro"
+            style="@style/Widget.Material3.Button.TextButton.Icon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Regresar"
+            android:textColor="@color/white"
+            android:textSize="19sp"
+            app:icon="@drawable/baseline_arrow_back_ios_24"
+            app:iconTint="@color/white"
+            android:onClick="regresarInicio"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/loginCard"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="120dp"
+        android:background="@drawable/login_card_bg"
+        android:orientation="vertical"
+        android:paddingStart="40dp"
+        android:paddingTop="48dp"
+        android:paddingEnd="40dp"
+        android:paddingBottom="32dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <!-- Título -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"
+            android:gravity="center"
+            android:text="Escoja el tipo de cuenta"
+            android:textColor="@color/azul_negro"
+            android:textSize="35sp"
+            android:textStyle="bold"
+            android:fontFamily="sans-serif"
+            android:letterSpacing="0.01" />
+
+        <!-- Contenedor para los botones -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center_vertical"
+            android:paddingVertical="20dp">
+
+            <!-- Botón Familiar -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:layout_marginBottom="24dp"
+                app:cardCornerRadius="20dp"
+                app:strokeColor="@color/azul_negro"
+                app:strokeWidth="0dp">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnFamily"
+                    style="@style/Widget.Material3.Button"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:padding="24dp"
+                    android:text="Familiar"
+                    android:textSize="32sp"
+                    android:textStyle="bold"
+                    android:backgroundTint="@color/azul_negro"
+                    app:icon="@drawable/btn_familiar"
+                    app:iconGravity="textTop"
+                    app:iconPadding="16dp"
+                    app:iconSize="90dp"
+                    app:iconTint="@android:color/white"
+                    app:cornerRadius="20dp" />
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Botón Adulto Mayor -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                app:strokeWidth="0dp">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnOldPeople"
+                    style="@style/Widget.Material3.Button"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:padding="24dp"
+                    android:text="Adulto Mayor"
+                    android:textSize="32sp"
+                    android:textStyle="bold"
+                    android:backgroundTint="@color/azul_negro"
+                    app:icon="@drawable/btn_adulto_mayor"
+                    app:iconGravity="textTop"
+                    app:iconPadding="16dp"
+                    app:iconSize="90dp"
+                    app:iconTint="@android:color/white"
+                    app:cornerRadius="20dp" />
+
+            </com.google.android.material.card.MaterialCardView>
+
+        </LinearLayout>
+
+        <!-- Texto de ayuda -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:gravity="center"
+            android:text="Seleccione una opción para continuar"
+            android:textColor="@color/gris"
+            android:textSize="20sp"
+            android:padding="8dp" />
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -14,29 +14,21 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="10dp"
         android:layout_marginTop="10dp"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:clickable="true"
-        android:focusable="true"
         android:background="?attr/selectableItemBackground"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <ImageButton
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnBackRegistro"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/baseline_arrow_back_ios_24"
-            android:contentDescription="Regresar" />
-
-        <TextView
+            style="@style/Widget.Material3.Button.TextButton.Icon"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Regresar"
             android:textColor="@color/white"
-            android:textSize="16sp"
-            android:layout_marginEnd="8dp" />
+            android:textSize="19sp"
+            app:icon="@drawable/baseline_arrow_back_ios_24"
+            app:iconTint="@color/white"
+            android:onClick="regresarInicio"/>
 
     </LinearLayout>
 
@@ -62,7 +54,6 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:layout_marginTop="30dp"
-            android:layout_marginBottom="30dp"
             android:text="Crea una cuenta"
             android:textAlignment="center"
             android:textColor="@color/azul_negro"
@@ -71,69 +62,88 @@
             android:fontFamily="sans-serif"
             android:letterSpacing="0.02" />
 
-        <EditText
+        <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/name"
             android:layout_width="match_parent"
-            android:layout_height="56dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="30dp"
             android:hint="@string/prompt_name"
-            android:inputType="textEmailAddress"
             android:selectAllOnFocus="true"
-            android:textColor="@color/gris"
-            android:textColorLink="#073770" />
+            android:inputType="text">
 
-        <EditText
+            <com.google.android.material.textfield.TextInputEditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/lastName"
             android:layout_width="match_parent"
-            android:layout_height="56dp"
+            android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
             android:hint="@string/prompt_lastname"
-            android:inputType="textEmailAddress"
             android:selectAllOnFocus="true"
-            android:textColor="@color/gris"
-            android:textColorLink="#073770" />
+            android:inputType="text">
 
-        <EditText
+            <com.google.android.material.textfield.TextInputEditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                />
+        </com.google.android.material.textfield.TextInputLayout>
+        <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/email"
             android:layout_width="match_parent"
-            android:layout_height="56dp"
+            android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
             android:hint="@string/prompt_email"
-            android:inputType="textEmailAddress"
             android:selectAllOnFocus="true"
-            android:textColor="@color/gris"
-            android:textColorLink="#073770" />
+            android:inputType="textEmailAddress">
 
-        <EditText
+        <com.google.android.material.textfield.TextInputEditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/password"
             android:layout_width="match_parent"
-            android:layout_height="56dp"
+            android:layout_height="wrap_content"
+            android:hint="@string/prompt_password"
             android:layout_marginTop="20dp"
-            android:hint="Contraseña"
-            android:imeActionLabel="@string/action_sign_in_short"
-            android:imeOptions="actionDone"
-            android:inputType="textPassword"
             android:selectAllOnFocus="true"
-            android:textColor="@color/gris"
-            android:textColorLink="#073770" />
+            android:inputType="textPassword">
 
-        <EditText
+            <com.google.android.material.textfield.TextInputEditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/confirmPassword"
             android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:layout_marginTop="20dp"
+            android:layout_height="wrap_content"
             android:hint="Confirmar Contraseña"
-            android:imeActionLabel="@string/action_sign_in_short"
-            android:imeOptions="actionDone"
-            android:inputType="textPassword"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="10dp"
             android:selectAllOnFocus="true"
-            android:textColor="@color/gris"
-            android:textColorLink="#073770" />
+            android:inputType="textPassword">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                />
+
+        </com.google.android.material.textfield.TextInputLayout>
 
         <Button
             android:id="@+id/login"
             android:layout_width="match_parent"
             android:layout_height="56dp"
-            android:layout_marginTop="40dp"
+            android:layout_marginTop="30dp"
             android:backgroundTint="#06376F"
             android:text="Registrarme"
             android:textColor="#FFFFFF"
@@ -144,7 +154,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
+            android:layout_marginTop="10dp"
             android:gravity="center"
             android:orientation="horizontal">
 
@@ -155,18 +165,21 @@
                 android:textColor="@color/gris"
                 android:textSize="14sp" />
 
-            <TextView
-                android:id="@+id/tvIniciarSesion"
+            <Button
+                style="?attr/borderlessButtonStyle"
+                android:id="@+id/btnLogin"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Inicia Sesión"
                 android:textColor="@color/azul_negro"
                 android:textStyle="bold"
                 android:textSize="14sp"
                 android:clickable="true"
                 android:focusable="true"
-                android:background="?attr/selectableItemBackground" />
-        </LinearLayout>
+                android:text="Inicia Sesión"
+                android:background="?attr/selectableItemBackground"
+                android:onClick="abrirLogin"/>
+
+            </LinearLayout>
 
     </LinearLayout>
 
