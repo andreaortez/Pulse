@@ -82,19 +82,19 @@
                     style="@style/Widget.Material3.Button"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
+                    android:backgroundTint="@color/azul_negro"
                     android:gravity="center"
+                    android:onClick="abrirRegistroFamiliar"
                     android:padding="24dp"
                     android:text="Familiar"
                     android:textSize="32sp"
                     android:textStyle="bold"
-                    android:backgroundTint="@color/azul_negro"
+                    app:cornerRadius="20dp"
                     app:icon="@drawable/btn_familiar"
                     app:iconGravity="textTop"
                     app:iconPadding="16dp"
                     app:iconSize="90dp"
-                    app:iconTint="@android:color/white"
-                    app:cornerRadius="20dp"
-                    android:onClick="abrirRegistro"/>
+                    app:iconTint="@android:color/white" />
 
             </com.google.android.material.card.MaterialCardView>
 
@@ -110,19 +110,19 @@
                     style="@style/Widget.Material3.Button"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
+                    android:backgroundTint="@color/azul_negro"
                     android:gravity="center"
+                    android:onClick="abrirRegistroAdultoMayor"
                     android:padding="24dp"
                     android:text="Adulto Mayor"
                     android:textSize="32sp"
                     android:textStyle="bold"
-                    android:backgroundTint="@color/azul_negro"
+                    app:cornerRadius="20dp"
                     app:icon="@drawable/btn_adulto_mayor"
                     app:iconGravity="textTop"
                     app:iconPadding="16dp"
                     app:iconSize="90dp"
-                    app:iconTint="@android:color/white"
-                    app:cornerRadius="20dp"
-                    android:onClick="abrirRegistro"/>
+                    app:iconTint="@android:color/white" />
 
             </com.google.android.material.card.MaterialCardView>
 

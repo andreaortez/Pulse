@@ -1,66 +1,177 @@
 package com.example.medilink.ui.login
 
-import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.Button
-import android.widget.ImageButton
-import android.widget.TextView
+import android.widget.EditText
+import android.widget.ProgressBar
 import android.widget.Toast
-import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
 import com.example.medilink.ChooseUser
 import com.example.medilink.MainActivity
 import com.example.medilink.R
-import com.example.medilink.R.layout.registro
-import com.example.medilink.R.layout.pantalla1
-import com.example.medilink.databinding.RegistroBinding
+import com.google.android.material.textfield.TextInputLayout
+import org.json.JSONObject
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import java.net.HttpURLConnection
+import java.net.URL
+import java.nio.charset.StandardCharsets
 
 class Registro : AppCompatActivity() {
 
-    private lateinit var loginViewModel: LoginViewModel
-    private lateinit var binding: RegistroBinding
+    private var tipoUsuario: String = "ADULTO_MAYOR" // valor por defecto
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // 1️⃣ INFLAR EL XML registro.xml
-        binding = RegistroBinding.inflate(layoutInflater)
         setContentView(R.layout.registro)
 
-        // 2️⃣ VIEWMODEL (si lo sigues usando)
-        loginViewModel = ViewModelProvider(this, LoginViewModelFactory())
-            .get(LoginViewModel::class.java)
+        tipoUsuario = intent.getStringExtra("tipousuario") ?: "ADULTO_MAYOR"
 
-        // 3️⃣ OBSERVERS DEL VIEWMODEL (si quieres dejarlos)
-        loginViewModel.loginFormState.observe(this@Registro, Observer { loginState ->
-            val state = loginState ?: return@Observer
+        // Inputs
+        val nameLayout = findViewById<TextInputLayout>(R.id.name)
+        val lastNameLayout = findViewById<TextInputLayout>(R.id.lastName)
+        val emailLayout = findViewById<TextInputLayout>(R.id.email)
+        val passwordLayout = findViewById<TextInputLayout>(R.id.password)
+        val confirmPasswordLayout = findViewById<TextInputLayout>(R.id.confirmPassword)
 
-            binding.login.isEnabled = state.isDataValid
+        val nameEdit = nameLayout.editText
+        val lastNameEdit = lastNameLayout.editText
+        val emailEdit = emailLayout.editText
+        val passwordEdit = passwordLayout.editText
+        val confirmPasswordEdit = confirmPasswordLayout.editText
 
-            if (state.usernameError != null) {
-                binding.email?.error = getString(state.usernameError)
+        val btnRegistrar = findViewById<Button>(R.id.login)   // botón grande del card
+        val btnIrALogin = findViewById<Button>(R.id.btnLogin) // "¿Ya tienes cuenta? Inicia sesión"
+        val loading = findViewById<ProgressBar>(R.id.loading)
+
+        btnRegistrar.setOnClickListener {
+            val nombre = nameEdit?.text?.toString()?.trim().orEmpty()
+            val apellido = lastNameEdit?.text?.toString()?.trim().orEmpty()
+            val correo = emailEdit?.text?.toString()?.trim().orEmpty()
+            val contrasena = passwordEdit?.text?.toString()?.trim().orEmpty()
+            val confirmar = confirmPasswordEdit?.text?.toString()?.trim().orEmpty()
+
+            if (nombre.isEmpty() || apellido.isEmpty() || correo.isEmpty() ||
+                contrasena.isEmpty() || confirmar.isEmpty()
+            ) {
+                Toast.makeText(this, "Completa todos los campos", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
             }
-        })
 
-        loginViewModel.loginResult.observe(this@Registro, Observer { loginResult ->
-            val result = loginResult ?: return@Observer
+            if (contrasena.length < 6) {
+                Toast.makeText(this, "La contraseña debe tener al menos 6 caracteres", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
 
-            binding.loading.visibility = View.GONE
-            if (result.error != null) {
-                showLoginFailed(result.error)
+            if (contrasena != confirmar) {
+                Toast.makeText(this, "Las contraseñas no coinciden", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
             }
-            if (result.success != null) {
-                updateUiWithUser(result.success)
-            }
-            setResult(Activity.RESULT_OK)
+
+            // Si todo bien → llamar al backend
+            loading.visibility = View.VISIBLE
+            btnRegistrar.isEnabled = false
+
+            registrarUsuarioEnBackend(
+                nombre = nombre,
+                apellido = apellido,
+                correo = correo,
+                contrasena = contrasena,
+                tipoUsuario = tipoUsuario,
+                onSuccess = {
+                    runOnUiThread {
+                        loading.visibility = View.GONE
+                        btnRegistrar.isEnabled = true
+                        Toast.makeText(this, "Usuario creado correctamente", Toast.LENGTH_LONG).show()
+                        // Después de registrar, lo mandamos al login
+                        startActivity(Intent(this, Login::class.java))
+                        finish()
+                    }
+                },
+                onError = { mensaje ->
+                    runOnUiThread {
+                        loading.visibility = View.GONE
+                        btnRegistrar.isEnabled = true
+                        Toast.makeText(this, "Error: $mensaje", Toast.LENGTH_LONG).show()
+                    }
+                }
+            )
+        }
+
+        btnIrALogin.setOnClickListener {
+            startActivity(Intent(this, Login::class.java))
             finish()
-        })
+        }
+    }
 
+    private fun registrarUsuarioEnBackend(
+        nombre: String,
+        apellido: String,
+        correo: String,
+        contrasena: String,
+        tipoUsuario: String,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+        Thread {
+            try {
+                val url = URL("http://10.0.2.2:3000/users/createUser")
+                val connection = (url.openConnection() as HttpURLConnection).apply {
+                    requestMethod = "POST"
+                    connectTimeout = 5000
+                    readTimeout = 5000
+                    doOutput = true
+                    setRequestProperty("Content-Type", "application/json; charset=UTF-8")
+                }
+
+                val telefonoDummy = "9999-9999"
+                val edadDummy = 72
+
+                val jsonBody = """
+                {
+                  "nombre": "$nombre",
+                  "apellido": "$apellido",
+                  "correo": "$correo",
+                  "contraseña": "$contrasena",
+                  "num_telefono": "$telefonoDummy",
+                  "edad": $edadDummy,
+                  "tipoUsuario": "$tipoUsuario"
+                }
+            """.trimIndent()
+
+                connection.outputStream.use { os ->
+                    val input = jsonBody.toByteArray(StandardCharsets.UTF_8)
+                    os.write(input, 0, input.size)
+                }
+
+                val code = connection.responseCode
+
+                if (code == HttpURLConnection.HTTP_OK) {
+                    val response = connection.inputStream.bufferedReader().use(BufferedReader::readText)
+                    onSuccess()
+                } else {
+                    val errorMsg = try {
+                        val errText = connection.errorStream?.bufferedReader()?.use(BufferedReader::readText)
+                        if (!errText.isNullOrEmpty()) {
+                            val json = JSONObject(errText)
+                            json.optString("message", "Error HTTP $code")
+                        } else {
+                            "Error HTTP $code"
+                        }
+                    } catch (e: Exception) {
+                        "Error HTTP $code"
+                    }
+                    onError(errorMsg)
+                }
+
+                connection.disconnect()
+            } catch (e: Exception) {
+                onError(e.message ?: "Error desconocido")
+            }
+        }.start()
     }
 
     fun abrirUsuario(view: View) {
@@ -71,19 +182,5 @@ class Registro : AppCompatActivity() {
     fun abrirLogin(view: View) {
         val intent = Intent(this, Login::class.java)
         startActivity(intent)
-    }
-
-    private fun updateUiWithUser(model: LoggedInUserView) {
-        val welcome = getString(R.string.welcome)
-        val displayName = model.displayName
-        Toast.makeText(
-            applicationContext,
-            "$welcome $displayName",
-            Toast.LENGTH_LONG
-        ).show()
-    }
-
-    private fun showLoginFailed(@StringRes errorString: Int) {
-        Toast.makeText(applicationContext, errorString, Toast.LENGTH_SHORT).show()
     }
 }
