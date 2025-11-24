@@ -26,6 +26,8 @@ class HomeActivity : AppCompatActivity() {
 
         val rvDays = findViewById<RecyclerView>(R.id.rvDays)
         val tvToday = findViewById<TextView>(R.id.tvToday)
+        tvToday.text = "Hoy, " +
+                LocalDate.now().format(DateTimeFormatter.ofPattern("dd MMM"))
 
         rvDays.layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)

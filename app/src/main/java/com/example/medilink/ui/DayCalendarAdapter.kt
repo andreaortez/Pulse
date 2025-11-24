@@ -46,6 +46,7 @@ class DayCalendarAdapter(
         ).replaceFirstChar { it.titlecase(localeEs) }
 
 
+
         holder.tvDayNumber.text = dayNumber
         holder.tvDayName.text = dayName
 
@@ -55,7 +56,7 @@ class DayCalendarAdapter(
         val white = getColor(holder.itemView.context, android.R.color.white)
         getColor(holder.itemView.context, android.R.color.white)
 
-        // si quisieras colores diferentes para texto seleccionado/normal:
+
         holder.tvDayNumber.setTextColor(white)
         holder.tvDayName.setTextColor(white)
 
