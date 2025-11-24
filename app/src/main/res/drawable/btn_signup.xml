@@ -3,9 +3,9 @@
     android:shape="rectangle">
 
     <!-- Color del card -->
-    <solid android:color="@color/azul_negro" />
+    <solid android:color="#012248" />
 
     <!-- Bordes redondeados -->
-    <corners android:radius="20dp" />
+    <corners android:radius="40dp" />
 
 </shape>
