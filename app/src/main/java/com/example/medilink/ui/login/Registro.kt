@@ -22,7 +22,7 @@ import java.nio.charset.StandardCharsets
 
 class Registro : AppCompatActivity() {
 
-    private var tipoUsuario: String = "ADULTO_MAYOR" // valor por defecto
+    private var tipoUsuario: String = "ADULTO_MAYOR"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,8 +43,8 @@ class Registro : AppCompatActivity() {
         val passwordEdit = passwordLayout.editText
         val confirmPasswordEdit = confirmPasswordLayout.editText
 
-        val btnRegistrar = findViewById<Button>(R.id.login)   // botón grande del card
-        val btnIrALogin = findViewById<Button>(R.id.btnLogin) // "¿Ya tienes cuenta? Inicia sesión"
+        val btnRegistrar = findViewById<Button>(R.id.login)
+        val btnIrALogin = findViewById<Button>(R.id.btnLogin)
         val loading = findViewById<ProgressBar>(R.id.loading)
 
         btnRegistrar.setOnClickListener {
@@ -71,7 +71,6 @@ class Registro : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            // Si todo bien → llamar al backend
             loading.visibility = View.VISIBLE
             btnRegistrar.isEnabled = false
 
@@ -86,7 +85,6 @@ class Registro : AppCompatActivity() {
                         loading.visibility = View.GONE
                         btnRegistrar.isEnabled = true
                         Toast.makeText(this, "Usuario creado correctamente", Toast.LENGTH_LONG).show()
-                        // Después de registrar, lo mandamos al login
                         startActivity(Intent(this, Login::class.java))
                         finish()
                     }
@@ -127,34 +125,27 @@ class Registro : AppCompatActivity() {
                     setRequestProperty("Content-Type", "application/json; charset=UTF-8")
                 }
 
-                val telefonoDummy = "9999-9999"
-                val edadDummy = 72
-
-                val jsonBody = """
-                {
-                  "nombre": "$nombre",
-                  "apellido": "$apellido",
-                  "correo": "$correo",
-                  "contraseña": "$contrasena",
-                  "num_telefono": "$telefonoDummy",
-                  "edad": $edadDummy,
-                  "tipoUsuario": "$tipoUsuario"
-                }
-            """.trimIndent()
+                val jsonBody = JSONObject().apply {
+                    put("nombre", nombre)
+                    put("apellido", apellido)
+                    put("correo", correo)
+                    put("contraseña", contrasena)
+                    put("tipoUsuario", tipoUsuario)
+                }.toString()
 
                 connection.outputStream.use { os ->
-                    val input = jsonBody.toByteArray(StandardCharsets.UTF_8)
+                    val input = jsonBody.toByteArray(Charsets.UTF_8)
                     os.write(input, 0, input.size)
                 }
 
                 val code = connection.responseCode
 
                 if (code == HttpURLConnection.HTTP_OK) {
-                    val response = connection.inputStream.bufferedReader().use(BufferedReader::readText)
+                    connection.inputStream.bufferedReader().use { it.readText() }
                     onSuccess()
                 } else {
                     val errorMsg = try {
-                        val errText = connection.errorStream?.bufferedReader()?.use(BufferedReader::readText)
+                        val errText = connection.errorStream?.bufferedReader()?.use { it.readText() }
                         if (!errText.isNullOrEmpty()) {
                             val json = JSONObject(errText)
                             json.optString("message", "Error HTTP $code")
