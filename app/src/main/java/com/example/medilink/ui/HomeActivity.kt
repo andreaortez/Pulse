@@ -5,6 +5,7 @@ import DayUi
 import android.annotation.SuppressLint
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
@@ -31,7 +32,6 @@ class HomeActivity : AppCompatActivity() {
 
         val today = LocalDate.now()
 
-        // 5 días, con HOY en el centro (posición 2)
         val days = listOf(
             DayUi(today.minusDays(2)),
             DayUi(today.minusDays(1)),
@@ -54,6 +54,36 @@ class HomeActivity : AppCompatActivity() {
         rvDays.post {
             rvDays.scrollToPosition(centerIndex)
         }
+
+        val rvMedicines = findViewById<RecyclerView>(R.id.rvMedicines)
+        rvMedicines.layoutManager = LinearLayoutManager(this)
+
+
+        val medicines = listOf(
+            MedicineUi(
+                name = "Antihistamínico",
+                timeText = "Hoy a las 6:00 a. m.",
+                extraText = "Tengo alarma a esa hora"
+            ),
+            MedicineUi(
+                name = "Almagel, 200 ml",
+                timeText = "Hoy después del almuerzo",
+                extraText = "Tomar con el estómago lleno"
+            ),
+            MedicineUi(
+                name = "Ibuprofeno 400 mg",
+                timeText = "Hoy a las 9:00 p. m.",
+                extraText = "No tomar con el estómago vacío"
+            )
+        )
+
+        val medicinesAdapter = MedicinesAdapter(medicines) { med, checked ->
+
+            Log.d("HomeActivity", "Medicamento ${med.name} tomado = $checked")
+        }
+
+        rvMedicines.adapter = medicinesAdapter
+
     }
     }
 
