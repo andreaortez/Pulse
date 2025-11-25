@@ -110,7 +110,7 @@ fun TimeReminderCard(
 
 @Preview(showBackground = true)
 @Composable
-fun AddMedicineScreenPreview() {
+fun TimeReminderCardPreview() {
     MaterialTheme {
         TimeReminderCard(
             label = "Time 1",
