@@ -130,7 +130,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="¿No tienes una cuenta? "
-                android:textColor="@color/gris"
+                android:textColor="@color/azul_oscuro"
                 android:textSize="14sp" />
 
             <Button

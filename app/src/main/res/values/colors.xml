@@ -12,5 +12,6 @@
     <color name="celeste_vivido">#43a6f1</color>
     <color name="azul_negro">#084182</color>
     <color name="celeste_vivido2">#65bff6</color>
-    <color name="gris">#073770</color>
+    <color name="azul_oscuro">#073770</color>
+    <color name="celeste_claro">#f3fdff</color>
 </resources>
