@@ -135,7 +135,7 @@
             android:layout_marginTop="16dp"
             android:gravity="center"
             android:text="Seleccione una opción para continuar"
-            android:textColor="@color/gris"
+            android:textColor="@color/azul_oscuro"
             android:textSize="20sp"
             android:padding="8dp" />
 

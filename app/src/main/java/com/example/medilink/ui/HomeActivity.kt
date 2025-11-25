@@ -3,15 +3,19 @@ package com.example.medilink.ui
 import DayCalendarAdapter
 import DayUi
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.runtime.Composable
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.medilink.R // Important: Import R from your app's package
+import com.example.medilink.ui.login.Registro
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -87,5 +91,13 @@ class HomeActivity : AppCompatActivity() {
         rvMedicines.adapter = medicinesAdapter
 
     }
+
+    fun AddMedicine(view: View) {
+        val intent = Intent(this, AddMedicineActivity::class.java)
+        // si quieres pasar datos:
+        // intent.putExtra("tipousuario", "ADULTO_MAYOR")
+        startActivity(intent)
     }
+
+}
 
