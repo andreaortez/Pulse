@@ -11,11 +11,9 @@ import android.view.View
 import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.runtime.Composable
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.medilink.R // Important: Import R from your app's package
-import com.example.medilink.ui.login.Registro
+import com.example.medilink.R
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -28,15 +26,20 @@ class HomeActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
 
+
         val rvDays = findViewById<RecyclerView>(R.id.rvDays)
         val tvToday = findViewById<TextView>(R.id.tvToday)
-        tvToday.text = "Hoy, " +
-                LocalDate.now().format(DateTimeFormatter.ofPattern("dd MMM"))
+
+        val localeEs = Locale("es", "ES")
+        val today = LocalDate.now()
+
+
+        tvToday.text = "Hoy, " + today.format(
+            DateTimeFormatter.ofPattern("dd MMM", localeEs)
+        )
 
         rvDays.layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
-
-        val today = LocalDate.now()
 
         val days = listOf(
             DayUi(today.minusDays(2)),
@@ -48,22 +51,25 @@ class HomeActivity : AppCompatActivity() {
 
         val centerIndex = 2
 
-        val adapter = DayCalendarAdapter(days = days, onDaySelected = { selectedDate ->
-                Locale("es", "ES")
-                tvToday.text = "Hoy, " +
-                        selectedDate.format(DateTimeFormatter.ofPattern("dd MMM"))
-            }, initialSelectedIndex = centerIndex,)
+        val adapter = DayCalendarAdapter(
+            days = days,
+            onDaySelected = { selectedDate ->
+                tvToday.text = "Hoy, " + selectedDate.format(
+                    DateTimeFormatter.ofPattern("dd MMM", localeEs)
+                )
+            },
+            initialSelectedIndex = centerIndex
+        )
 
         rvDays.adapter = adapter
-
 
         rvDays.post {
             rvDays.scrollToPosition(centerIndex)
         }
 
+
         val rvMedicines = findViewById<RecyclerView>(R.id.rvMedicines)
         rvMedicines.layoutManager = LinearLayoutManager(this)
-
 
         val medicines = listOf(
             MedicineUi(
@@ -83,21 +89,30 @@ class HomeActivity : AppCompatActivity() {
             )
         )
 
-        val medicinesAdapter = MedicinesAdapter(medicines) { med, checked ->
-
-            Log.d("HomeActivity", "Medicamento ${med.name} tomado = $checked")
-        }
+        val medicinesAdapter = MedicinesAdapter(
+            items = medicines,
+            onCheckedChange = { med, checked ->
+                Log.d("HomeActivity", "Medicamento ${med.name} tomado = $checked")
+            },
+            onEditClick = { med ->
+                openEditMedicine(med)
+            }
+        )
 
         rvMedicines.adapter = medicinesAdapter
-
     }
+
 
     fun AddMedicine(view: View) {
         val intent = Intent(this, AddMedicineActivity::class.java)
-        // si quieres pasar datos:
-        // intent.putExtra("tipousuario", "ADULTO_MAYOR")
         startActivity(intent)
     }
 
-}
 
+    private fun openEditMedicine(medicine: MedicineUi) {
+        val intent = Intent(this, AddMedicineActivity::class.java)
+        // IMPORTANTE: MedicineUi debe ser Parcelable o Serializable
+        intent.putExtra("extra_medicine", medicine)
+        startActivity(intent)
+    }
+}
