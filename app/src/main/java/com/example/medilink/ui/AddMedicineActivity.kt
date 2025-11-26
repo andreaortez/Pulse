@@ -1,5 +1,6 @@
 package com.example.medilink.ui
 
+
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -10,6 +11,8 @@ class AddMedicineActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        val med : MedicineUi? = intent.getParcelableExtra("extra_medicine")
+
         setContent {
             MaterialTheme {
                 AddMedicineScreen(
@@ -17,7 +20,8 @@ class AddMedicineActivity : ComponentActivity() {
                     onDoneClick = {
                         // aquí puedes guardar la info si luego usas ViewModel/DB
                         finish()
-                    }
+                    },
+                    existingMedicine = med
                 )
             }
         }

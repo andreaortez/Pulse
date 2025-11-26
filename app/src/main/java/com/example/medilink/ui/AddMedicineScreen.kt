@@ -1,5 +1,6 @@
 package com.example.medilink.ui
 
+
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.widget.Toast
@@ -46,11 +47,14 @@ fun AddMedicineScreen(
     onBackClick: () -> Unit = {},
     onDoneClick: () -> Unit = {},
     idUsuario: String = "671234abcd1234abcd1234ff",
+    existingMedicine: MedicineUi? = null
 ) {
     // URL base de tu backend (ajústala)
     val BASE_URL = "https://Backend/meds"
 
-    var medicineName by remember { mutableStateOf("") }
+    var medicineName by remember(existingMedicine) {
+        mutableStateOf(existingMedicine?.name ?: "")
+    }
     var amount by remember { mutableStateOf("1") }
     var duration by remember { mutableStateOf("2") } // si luego no lo usas, lo puedes eliminar
     var selectedForm by remember { mutableStateOf(0) }
@@ -131,7 +135,10 @@ fun AddMedicineScreen(
                 CenterAlignedTopAppBar(
                     title = {
                         Text(
-                            text = "Añadir Medicamentos",
+                            text = if (existingMedicine == null)
+                                "Añadir Medicamento"
+                            else
+                                "Editar Medicamento",
                             fontWeight = FontWeight.Bold,
                             fontSize = 20.sp,
                             color = Color.White
@@ -158,7 +165,6 @@ fun AddMedicineScreen(
             Button(
                 onClick = {
                     scope.launch {
-                        // Validaciones básicas
                         if (medicineName.isBlank()
                             || startDateBackend.isBlank()
                             || endDateBackend.isBlank()
@@ -186,7 +192,10 @@ fun AddMedicineScreen(
                         if (success) {
                             Toast.makeText(
                                 context,
-                                "Medicamento guardado",
+                                if (existingMedicine == null)
+                                    "Medicamento guardado"
+                                else
+                                    "Cambios guardados",
                                 Toast.LENGTH_SHORT
                             ).show()
                             onDoneClick()
@@ -209,7 +218,11 @@ fun AddMedicineScreen(
                     containerColor = Color.Transparent
                 )
             ) {
-                Text("Añadir", color = Color.White, fontSize = 20.sp)
+                Text(
+                    text = if (existingMedicine == null) "Añadir" else "Guardar",
+                    color = Color.White,
+                    fontSize = 20.sp
+                )
             }
         }
     ) { paddingValues ->
@@ -220,7 +233,7 @@ fun AddMedicineScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp)
         ) {
-            // Nombre del medicamento
+
             Text(
                 text = "Nombre del medicamento",
                 fontSize = 20.sp,
@@ -287,7 +300,6 @@ fun AddMedicineScreen(
                 )
             }
 
-            // Tipo de medicamento
             Text(
                 text = "Tipo de medicamento",
                 fontSize = 20.sp,
@@ -316,7 +328,6 @@ fun AddMedicineScreen(
                 }
             }
 
-            // FECHAS: Inicio y fin
             DatePickerRange(
                 startDateDisplay = startDateDisplay,
                 endDateDisplay = endDateDisplay
@@ -327,7 +338,6 @@ fun AddMedicineScreen(
                 endDateBackend = endBack
             }
 
-            // HORAS DE RECORDATORIO
             Text(
                 text = "Horas de recordatorio",
                 fontSize = 20.sp,
