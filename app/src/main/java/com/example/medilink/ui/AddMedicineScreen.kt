@@ -426,6 +426,7 @@ suspend fun createMedicine(
         try {
             val cantInt = cantidad.toIntOrNull() ?: 1
 
+            // 1) Crear medicamento
             val bodyJson = JSONObject().apply {
                 put("nombre", nombre)
                 put("cantidad", cantInt)
@@ -436,7 +437,7 @@ suspend fun createMedicine(
                 put("id_usuario", idUsuario)
             }
 
-            val url = URL(baseUrl)
+            val url = URL(baseUrl) // ej: http://10.0.2.2:3000/meds/registerMed
             val conn = (url.openConnection() as HttpURLConnection).apply {
                 requestMethod = "POST"
                 connectTimeout = 10_000
@@ -451,9 +452,68 @@ suspend fun createMedicine(
             }
 
             val responseCode = conn.responseCode
-            conn.disconnect()
 
-            responseCode in 200..299
+            if (responseCode in 200..299) {
+                // Leer cuerpo para obtener el _id del medicamento
+                val responseText = conn.inputStream.bufferedReader().use { it.readText() }
+                conn.disconnect()
+
+                val json = JSONObject(responseText)
+                val medicamentoJson = json.optJSONObject("medicamento")
+                val medId = medicamentoJson?.optString("_id")
+
+                // 2) Crear recordatorio inicial usando la primera hora
+                val primeraHora = horas.firstOrNull()
+
+                if (!medId.isNullOrBlank() && !primeraHora.isNullOrBlank()) {
+                    try {
+                        // Combinar fechaInicio ("yyyy-MM-dd") + primeraHora ("HH:mm")
+                        val parser = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
+                        val date = parser.parse("$fechaInicio $primeraHora")
+
+                        val isoFormatter = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
+                        val fechaIso = isoFormatter.format(date!!)
+
+                        // baseUrl = ".../meds/registerMed"
+                        // -> reminderUrl = ".../meds/agregarRecordatorio"
+                        val reminderUrlStr = baseUrl.replace("/registerMed", "/agregarRecordatorio")
+                        val reminderUrl = URL(reminderUrlStr)
+
+                        val bodyRecordatorio = JSONObject().apply {
+                            put("med_id", medId)
+                            put("fecha", fechaIso)
+                        }
+
+                        val connRem = (reminderUrl.openConnection() as HttpURLConnection).apply {
+                            requestMethod = "POST"
+                            connectTimeout = 10_000
+                            readTimeout = 10_000
+                            doOutput = true
+                            setRequestProperty("Content-Type", "application/json; charset=utf-8")
+                        }
+
+                        connRem.outputStream.use { os ->
+                            val input = bodyRecordatorio.toString().toByteArray(Charsets.UTF_8)
+                            os.write(input, 0, input.size)
+                        }
+
+                        val reminderCode = connRem.responseCode
+                        connRem.disconnect()
+
+                        println("Recordatorio creado, status: $reminderCode")
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+
+                true
+            } else {
+                // Error en creación de medicamento
+                val errorText = conn.errorStream?.bufferedReader()?.use { it.readText() }
+                conn.disconnect()
+                println("Error creando medicamento: $errorText")
+                false
+            }
         } catch (e: Exception) {
             e.printStackTrace()
             false
