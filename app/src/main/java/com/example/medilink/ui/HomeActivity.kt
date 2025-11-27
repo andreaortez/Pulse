@@ -8,6 +8,7 @@ import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
@@ -50,6 +51,11 @@ class HomeActivity : AppCompatActivity() {
         val localeEs = Locale("es", "ES")
         val today = LocalDate.now()
 
+        val navHeart = findViewById<ImageView>(R.id.navHeart)
+        navHeart.setOnClickListener {
+            val intent = Intent(this, ChatBotActivity::class.java)
+            startActivity(intent)
+        }
         tvToday.text = "Hoy, " + today.format(
             DateTimeFormatter.ofPattern("dd MMM", localeEs)
         )
