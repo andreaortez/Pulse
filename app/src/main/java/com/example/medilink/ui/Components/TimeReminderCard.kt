@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.sp
 import com.example.medilink.ui.theme.CelesteClaro
 import com.example.medilink.ui.theme.CelesteVivido2
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -24,23 +25,14 @@ import com.example.medilink.ui.AddMedicineScreen
 
 @Composable
 fun TimeReminderCard(
-    label: String = "Time 1",
     time: String,
-    onAddClick: () -> Unit = {}
+    onDeleteClick: () -> Unit = {}
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
-        Text(
-            text = label,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(bottom = 8.dp),
-            color = Color.DarkGray,
-        )
-
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 24.dp),
+                .padding(bottom = 15.dp),
             shape = RoundedCornerShape(18.dp),
             colors = CardDefaults.cardColors(
                 containerColor = CelesteClaro
@@ -91,11 +83,11 @@ fun TimeReminderCard(
                         shadowElevation = 2.dp,
                         modifier = Modifier
                             .size(42.dp)
-                            .clickable { onAddClick() }
+                            .clickable { onDeleteClick() }
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
-                                imageVector = Icons.Default.Add,
+                                imageVector = Icons.Default.Clear,
                                 contentDescription = "Agregar hora",
                                 tint = CelesteVivido2,
                                 modifier = Modifier.size(28.dp)
@@ -113,13 +105,8 @@ fun TimeReminderCard(
 fun TimeReminderCardPreview() {
     MaterialTheme {
         TimeReminderCard(
-            label = "Time 1",
-            time = "08:00",
-            onAddClick = {
-                // Aquí luego puedes abrir un TimePicker y actualizar selectedTime
-                // por ahora lo dejamos fijo o cambias a otro valor para probar
-                // selectedTime = "09:30"
-            }
+            time = "08:00 a.m.",
+            onDeleteClick = {}
         )
     }
 }

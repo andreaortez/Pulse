@@ -2,10 +2,9 @@ package com.example.medilink.ui
 
 
 import android.app.DatePickerDialog
-import android.app.TimePickerDialog
 import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -13,6 +12,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.rememberCoroutineScope
@@ -27,10 +27,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.medilink.R
-import com.example.medilink.ui.Components.MedicineFormChip
-import com.example.medilink.ui.Components.TimeReminderCard
-import com.example.medilink.ui.Components.DatePickerRange
-import com.example.medilink.ui.theme.CelesteVivido
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.launch
@@ -41,12 +37,24 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 
+//components
+import com.example.medilink.ui.Components.MedicineFormChip
+import com.example.medilink.ui.Components.TimeReminderCard
+import com.example.medilink.ui.Components.DatePickerRange
+import com.example.medilink.ui.Components.DialTimePicker
+
+// Colores
+import com.example.medilink.ui.theme.CelesteVivido
+import com.example.medilink.ui.theme.AzulNegro
+import com.example.medilink.ui.theme.Azul
+import com.example.medilink.ui.theme.AzulOscuro
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddMedicineScreen(
     onBackClick: () -> Unit = {},
     onDoneClick: () -> Unit = {},
-    idUsuario: String = "671234abcd1234abcd1234ff",
+    idUsuario: String,
     existingMedicine: MedicineUi? = null
 ) {
     // URL base de tu backend (ajústala)
@@ -56,8 +64,10 @@ fun AddMedicineScreen(
         mutableStateOf(existingMedicine?.name ?: "")
     }
     var amount by remember { mutableStateOf("1") }
-    var duration by remember { mutableStateOf("2") } // si luego no lo usas, lo puedes eliminar
     var selectedForm by remember { mutableStateOf(0) }
+
+    var showTimePicker by remember { mutableStateOf(false) }
+    var selectedTime by remember { mutableStateOf("") }
 
     // FECHAS (display y formato backend)
     val dateFormatDisplay = remember { SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()) }
@@ -104,24 +114,6 @@ fun AddMedicineScreen(
             c.get(Calendar.YEAR),
             c.get(Calendar.MONTH),
             c.get(Calendar.DAY_OF_MONTH)
-        ).show()
-    }
-
-    fun pickTime(onPicked: (String) -> Unit) {
-        val c = Calendar.getInstance()
-        val hour = c.get(Calendar.HOUR_OF_DAY)
-        val minute = c.get(Calendar.MINUTE)
-
-        TimePickerDialog(
-            context,
-            { _, h, m ->
-                val hh = h.toString().padStart(2, '0')
-                val mm = m.toString().padStart(2, '0')
-                onPicked("$hh:$mm") // formato "HH:mm"
-            },
-            hour,
-            minute,
-            true // 24h
         ).show()
     }
 
@@ -338,41 +330,80 @@ fun AddMedicineScreen(
                 endDateBackend = endBack
             }
 
+            // Título sección de recordatorios
             Text(
-                text = "Horas de recordatorio",
+                text = "Añadir Recordatorios",
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.DarkGray,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
 
-            TimeReminderCard(
-                label = "Agregar hora",
-                time = if (reminderTimes.isEmpty())
-                    "Toca + para añadir"
-                else
-                    reminderTimes.joinToString(", "),
-                onAddClick = {
-                    pickTime { newTime ->
+            OutlinedButton(
+                onClick = { showTimePicker = true },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    containerColor = AzulOscuro,
+                    contentColor = Color.White
+                ),
+                border = BorderStroke(1.dp, Color.Transparent)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Notifications,
+                    contentDescription = "Seleccionar hora",
+                    tint = Color.White
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Añadir recordatorio",
+                    color = Color.White,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+
+            if (showTimePicker) {
+                DialTimePicker(
+                    onConfirm = { timePickerState ->
+                        val hh = timePickerState.hour.toString().padStart(2, '0')
+                        val mm = timePickerState.minute.toString().padStart(2, '0')
+                        val newTime = "$hh:$mm"
+
                         if (!reminderTimes.contains(newTime)) {
                             reminderTimes.add(newTime)
                         }
-                    }
-                }
-            )
 
+                        showTimePicker = false
+                    },
+                    onDismiss = {
+                        showTimePicker = false
+                    }
+                )
+            }
+
+            // Lista de cards, una por cada hora seleccionada
             if (reminderTimes.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
+                    Text(
+                        text = "Recordatorio",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(bottom = 8.dp),
+                        color = Color.DarkGray,
+                    )
                     reminderTimes.forEach { t ->
-                        AssistChip(
-                            onClick = { /* podrías borrar o editar si quieres */ },
-                            label = { Text(t) }
+                        TimeReminderCard(
+                            time = t,
+                            onDeleteClick = {
+                                reminderTimes.remove(t)
+                            }
                         )
                     }
                 }
@@ -385,11 +416,15 @@ fun AddMedicineScreen(
 @Composable
 fun AddMedicineScreenPreview() {
     MaterialTheme {
-        AddMedicineScreen()
+        AddMedicineScreen(
+            onBackClick = {},
+            onDoneClick = {},
+            idUsuario = "previewUser",
+            existingMedicine = null
+        )
     }
 }
 
-// crear medicamento AHORA usando fecha_inicio, fecha_fin y lista de horas
 suspend fun createMedicine(
     baseUrl: String,
     nombre: String,
