@@ -59,11 +59,10 @@ class HomeActivity : AppCompatActivity() {
         val today = LocalDate.now()
 
         val navHeart = findViewById<ImageView>(R.id.navHeart)
-        /*navHeart.setOnClickListener {
+        navHeart.setOnClickListener {
             val intent = Intent(this, ChatBotActivity::class.java)
             startActivity(intent)
-        }*/
-
+        }
         tvToday.text = "Hoy, " + today.format(
             DateTimeFormatter.ofPattern("dd MMM", localeEs)
         )
