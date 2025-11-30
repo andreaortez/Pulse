@@ -23,7 +23,6 @@ import java.util.Locale
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.json.JSONArray
 import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
@@ -31,6 +30,7 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.TimeZone
 import com.example.medilink.BuildConfig
+import com.example.medilink.MyProfileActivity
 
 data class Alert(
     val id: String,
@@ -48,6 +48,13 @@ class HomeActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
+
+        //tabs
+        val navUser = findViewById<ImageView>(R.id.navUser)
+        navUser.setOnClickListener {
+            val intent = Intent(this, MyProfileActivity::class.java)
+            startActivity(intent)
+        }
 
         val rvDays = findViewById<RecyclerView>(R.id.rvDays)
         val tvToday = findViewById<TextView>(R.id.tvToday)

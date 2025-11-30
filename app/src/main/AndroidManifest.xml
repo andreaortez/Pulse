@@ -19,6 +19,9 @@
             android:name=".ui.AddMedicineActivity"
             android:exported="false" />
         <activity
+            android:name=".MyProfileActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.HomeActivity"
             android:exported="false"
             android:label="@string/title_activity_home"
