@@ -34,7 +34,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 //components
-import com.example.medilink.ui.components.
+import com.example.medilink.ui.components.MedicineFormChip
 import com.example.medilink.ui.components.TimeReminderCard
 import com.example.medilink.ui.components.DatePickerRange
 import com.example.medilink.ui.components.DialTimePicker
