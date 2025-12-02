@@ -17,9 +17,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.medilink.data.ApiClient
+import com.example.medilink.data.ChatRequest
+import kotlinx.coroutines.launch
 
 class ChatBotActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,7 +38,8 @@ class ChatBotActivity : ComponentActivity() {
 
 data class ChatMessage(
     val text: String,
-    val fromUser: Boolean
+    val fromUser: Boolean,
+    val isTyping: Boolean = false
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -48,6 +53,7 @@ fun ChatBotScreen(onBackClick: () -> Unit) {
         )
     )
 
+    val scope = rememberCoroutineScope()
     var inputText by remember { mutableStateOf("") }
     val messages = remember {
         mutableStateListOf(
@@ -95,21 +101,71 @@ fun ChatBotScreen(onBackClick: () -> Unit) {
                 onTextChange = { inputText = it },
                 onSendClick = {
                     if (inputText.isNotBlank()) {
-                        // Agregar mensaje del usuario
-                        messages.add(ChatMessage(inputText, fromUser = true))
+                        val userMessage = inputText
 
-                        // Respuesta dummy del “bot”
-                        messages.add(
-                            ChatMessage(
-                                text = "Gracias, he registrado: \"$inputText\". Más adelante podré analizar tus signos vitales.",
-                                fromUser = false
-                            )
-                        )
-
+                        // 1) Agregar mensaje del usuario
+                        messages.add(ChatMessage(userMessage, fromUser = true))
                         inputText = ""
+
+                        // 2) Agregar burbuja de "escribiendo..."
+                        val typingMessage = ChatMessage(
+                            text = "Escribiendo...",
+                            fromUser = false,
+                            isTyping = true
+                        )
+                        messages.add(typingMessage)
+
+                        scope.launch {
+                            try {
+                                val response = ApiClient.chatApi.sendMessage(
+                                    ChatRequest(userPrompt = userMessage)
+                                )
+
+                                val botText = response.data?.respuesta
+                                    ?: response.message
+                                    ?: "No se pudo generar una respuesta en este momento."
+
+                                // 3) Reemplazar la burbuja de typing por la respuesta real
+                                val index = messages.indexOf(typingMessage)
+                                if (index != -1) {
+                                    messages[index] = ChatMessage(
+                                        text = botText,
+                                        fromUser = false
+                                    )
+                                } else {
+                                    messages.add(
+                                        ChatMessage(
+                                            text = botText,
+                                            fromUser = false
+                                        )
+                                    )
+                                }
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+
+                                val errorText =
+                                    "Lo siento, hubo un error al conectarme al servidor 😔"
+
+                                val index = messages.indexOf(typingMessage)
+                                if (index != -1) {
+                                    messages[index] = ChatMessage(
+                                        text = errorText,
+                                        fromUser = false
+                                    )
+                                } else {
+                                    messages.add(
+                                        ChatMessage(
+                                            text = errorText,
+                                            fromUser = false
+                                        )
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             )
+
         }
     ) { paddingValues ->
         Box(
@@ -138,8 +194,6 @@ fun ChatBubble(message: ChatMessage) {
         if (message.fromUser) Color(0xFF2196F3) else Color.White
     val textColor =
         if (message.fromUser) Color.White else Color(0xFF012248)
-    val alignment =
-        if (message.fromUser) Alignment.CenterEnd else Alignment.CenterStart
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -154,19 +208,18 @@ fun ChatBubble(message: ChatMessage) {
                     shape = RoundedCornerShape(18.dp)
                 )
                 .padding(horizontal = 14.dp, vertical = 10.dp),
-            contentAlignment = alignment
         ) {
             Text(
-                text = message.text,
-                color = textColor,
-                fontSize = 25.sp,
-                lineHeight = 28.sp
+                text = if (message.isTyping) "•••" else message.text,
+                color = if (message.isTyping) Color(0xFF7A7A7A) else textColor,
+                fontSize = if (message.isTyping) 18.sp else 17.sp,
+                lineHeight = 22.sp
             )
-
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatInputBar(
     text: String,
@@ -195,7 +248,7 @@ fun ChatInputBar(
                         fontSize = 16.sp
                     )
                 },
-                textStyle = LocalTextStyle.current.copy(
+                textStyle = TextStyle(
                     fontSize = 16.sp,
                     color = Color(0xFF012248)
                 ),
@@ -212,6 +265,7 @@ fun ChatInputBar(
             )
 
             Spacer(modifier = Modifier.width(8.dp))
+
             IconButton(
                 onClick = onSendClick,
                 modifier = Modifier

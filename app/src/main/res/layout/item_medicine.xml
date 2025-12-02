@@ -64,22 +64,6 @@
             android:layout_marginTop="4dp"/>
 
 
-        <TextView
-            android:id="@+id/tvTag"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@drawable/bg_medicine_pill"
-            android:paddingLeft="10dp"
-            android:paddingRight="10dp"
-            android:paddingTop="6dp"
-            android:paddingBottom="6dp"
-            android:text="Recordatorio activado"
-            android:textColor="#0d6efd"
-            android:textSize="12sp"
-            app:layout_constraintStart_toStartOf="@id/tvTime"
-            app:layout_constraintTop_toBottomOf="@id/tvTime"
-            android:layout_marginTop="10dp"/>
-
         <!-- Checkbox -->
         <CheckBox
             android:id="@+id/checkTaken"

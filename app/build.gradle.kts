@@ -71,6 +71,10 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest")
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
 
+    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
+
+
     // --- Resto de librerías usando el catalog---
     implementation("com.google.android.material:material:1.12.0")
     implementation(libs.androidx.core.ktx)
