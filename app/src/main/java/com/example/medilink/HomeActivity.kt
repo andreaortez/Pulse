@@ -1,4 +1,4 @@
-package com.example.medilink.ui
+package com.example.medilink
 
 import DayCalendarAdapter
 import DayUi
@@ -15,8 +15,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.lifecycle.lifecycleScope
-import com.example.medilink.R
-import com.example.medilink.SessionManager
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -29,8 +27,9 @@ import java.net.URL
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.TimeZone
-import com.example.medilink.BuildConfig
-import com.example.medilink.MyProfileActivity
+import com.example.medilink.ui.ChatBotActivity
+import com.example.medilink.ui.MedicineUi
+import com.example.medilink.ui.MedicinesAdapter
 
 data class Alert(
     val id: String,

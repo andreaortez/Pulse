@@ -1,8 +1,6 @@
 package com.example.medilink.ui.perfil
 
-import android.R.id
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -18,8 +16,6 @@ import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.outlined.Create
-import androidx.compose.material.icons.outlined.Face
 import androidx.compose.material.icons.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.Card
@@ -50,7 +46,7 @@ import com.example.medilink.ui.theme.AzulOscuro
 enum class ProfileOptionType {
     EDITPROFILE,
     VINCULATE,
-    LANGUAGE,
+    LIST,
     LOCATION,
     SUBSCRIPTION,
     CLEAR_CACHE,
@@ -60,8 +56,7 @@ enum class ProfileOptionType {
 
 @Composable
 fun ProfileScreen(
-    idUsuario: String,
-    userName: String = "Charlotte King",
+    userName: String,
     onBackClick: () -> Unit = {},
     onOptionClick: (ProfileOptionType) -> Unit = {}
 ) {
@@ -153,13 +148,6 @@ fun ProfileScreen(
                             color = Color(0xFF222222)
                         )
 
-                        // id debajo del nombre
-                        Text(
-                            text = "id: $idUsuario",
-                            fontSize = 25.sp,
-                            color = Color(0xFF888888)
-                        )
-
                         Spacer(modifier = Modifier.height(24.dp))
 
                         // LISTA DE OPCIONES
@@ -175,8 +163,8 @@ fun ProfileScreen(
 
                         ProfileOptionRow(
                             icon = Icons.Default.Face,
-                            label = "Language",
-                        ) { onOptionClick(ProfileOptionType.LANGUAGE) }
+                            label = "Listar usuarios encargados",
+                        ) { onOptionClick(ProfileOptionType.LIST) }
 
                         ProfileOptionRow(
                             icon = Icons.Default.LocationOn,
@@ -259,7 +247,6 @@ private fun ProfileOptionRow(
 fun ProfileScreenPreview() {
     MaterialTheme {
         ProfileScreen(
-            idUsuario = "demo",
             userName = "Charlotte King"
         )
     }

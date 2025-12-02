@@ -16,13 +16,16 @@
         android:usesCleartextTraffic="true"
         tools:targetApi="31">
         <activity
-            android:name=".ui.AddMedicineActivity"
+            android:name=".AddMedicineActivity"
             android:exported="false" />
         <activity
             android:name=".MyProfileActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.HomeActivity"
+            android:name=".VincularFamiliarActivity"
+            android:exported="false" />
+        <activity
+            android:name=".HomeActivity"
             android:exported="false"
             android:label="@string/title_activity_home"
             android:theme="@style/Theme.MediLink" />

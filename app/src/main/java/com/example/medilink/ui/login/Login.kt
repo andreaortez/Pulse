@@ -13,7 +13,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import com.example.medilink.ChooseUser
 import com.example.medilink.MainActivity
-import com.example.medilink.ui.HomeActivity
+import com.example.medilink.HomeActivity
 import com.example.medilink.R
 import com.google.android.material.textfield.TextInputLayout
 import com.example.medilink.SessionManager
