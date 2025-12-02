@@ -32,6 +32,9 @@ import kotlinx.coroutines.launch
 import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.TextFieldDefaults // si lo necesitas para otras cosas
+
 
 //components
 import com.example.medilink.ui.components.MedicineFormChip
@@ -42,6 +45,7 @@ import com.example.medilink.ui.components.DialTimePicker
 // Colores
 import com.example.medilink.ui.theme.CelesteVivido
 import com.example.medilink.ui.theme.Azul
+import com.example.medilink.ui.theme.AzulNegro
 import com.example.medilink.ui.theme.AzulOscuro
 import org.json.JSONArray
 import java.text.SimpleDateFormat
@@ -215,10 +219,13 @@ fun AddMedicineScreen(
                     .fillMaxWidth()
                     .padding(bottom = 24.dp),
                 shape = RoundedCornerShape(12.dp),
-                colors = TextFieldDefaults.outlinedTextFieldColors(
+                colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = Azul,
+                    unfocusedBorderColor = Color.LightGray,
                     errorBorderColor = Color.Red,
                     cursorColor = Azul,
+                    focusedLabelColor = Azul,
+                    focusedTextColor = AzulNegro
                 )
             )
 
@@ -246,10 +253,13 @@ fun AddMedicineScreen(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     shape = RoundedCornerShape(12.dp),
                     singleLine = true,
-                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                    colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Azul,
+                        unfocusedBorderColor = Color.LightGray,
                         errorBorderColor = Color.Red,
                         cursorColor = Azul,
+                        focusedLabelColor = Azul,
+                        focusedTextColor = AzulNegro
                     ),
                     trailingIcon = {
                         Box(

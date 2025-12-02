@@ -25,6 +25,9 @@
             android:name=".VincularFamiliarActivity"
             android:exported="false" />
         <activity
+            android:name=".ListarUsuariosActivity"
+            android:exported="false" />
+        <activity
             android:name=".HomeActivity"
             android:exported="false"
             android:label="@string/title_activity_home"

@@ -1,4 +1,4 @@
-package com.example.medilink.ui
+package com.example.medilink.ui.perfil
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -27,9 +27,9 @@ import com.example.medilink.ui.theme.AzulNegro
 import com.example.medilink.ui.theme.CelesteVivido
 import com.example.medilink.ui.theme.CelesteClaro
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Face
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.ui.graphics.Color
+import kotlinx.coroutines.delay
 
 data class Usuario(
     val id: String,
@@ -42,6 +42,7 @@ data class Usuario(
 @Composable
 fun VincularFamiliarScreen(
     idUsuarioActual: String,
+    type: String,
     onBackClick: () -> Unit = {},
     onVincularExitoso: () -> Unit = {}
 ) {
@@ -54,12 +55,18 @@ fun VincularFamiliarScreen(
     val baseUrl = BuildConfig.USERS_URL
     val scope = rememberCoroutineScope()
 
+    val vincular = when (type) {
+        "FAMILIAR" -> "Vincular Adulto Mayor"
+        "ADULTO_MAYOR" -> "Vincular Familiar"
+        else -> "Vincular Usuario"
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
                     Text(
-                        text = "Vincular Familiar",
+                        text = vincular,
                         style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.Bold,
                             color = Color.White
@@ -118,7 +125,7 @@ fun VincularFamiliarScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Face,
+                            imageVector = Icons.Default.Person,
                             contentDescription = "Vincular",
                             modifier = Modifier.size(36.dp),
                             tint = CelesteVivido
@@ -297,11 +304,21 @@ fun VincularFamiliarScreen(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
+                            val esAdultoMayor = user.tipo.equals("ADULTO_MAYOR", ignoreCase = true)
+                            val tipoNormalizado = when (user.tipo.uppercase()) {
+                                "ADULTO_MAYOR" -> "Adulto mayor"
+                                "FAMILIAR"     -> "Familiar"
+                                else -> user.tipo
+                                    .replace("_", " ")
+                                    .lowercase()
+                                    .replaceFirstChar { it.titlecase() }
+                            }
+
                             Box(
                                 modifier = Modifier
                                     .size(50.dp)
                                     .background(
-                                        color = if (user.tipo.contains("ADULTO_MAYOR", ignoreCase = true)) {
+                                        color = if (esAdultoMayor) {
                                             CelesteVivido.copy(alpha = 0.2f)
                                         } else {
                                             AzulNegro.copy(alpha = 0.2f)
@@ -314,7 +331,7 @@ fun VincularFamiliarScreen(
                                     text = user.nombre.first().uppercase(),
                                     style = MaterialTheme.typography.titleLarge.copy(
                                         fontWeight = FontWeight.Bold,
-                                        color = if (user.tipo.contains("ADULTO_MAYOR", ignoreCase = true)) {
+                                        color = if (esAdultoMayor) {
                                             CelesteVivido
                                         } else {
                                             AzulNegro
@@ -336,9 +353,9 @@ fun VincularFamiliarScreen(
                                     )
                                 )
                                 Text(
-                                    text = user.tipo.replace("_", " "),
+                                    text = tipoNormalizado,
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = if (user.tipo.contains("ADULTO_MAYOR", ignoreCase = true)) {
+                                    color = if (esAdultoMayor) {
                                         CelesteVivido
                                     } else {
                                         AzulNegro.copy(alpha = 0.7f)
@@ -355,20 +372,23 @@ fun VincularFamiliarScreen(
                                 scope.launch {
                                     isLoading = true
                                     mensaje = null
-                                    isError = false
 
+                                    // Validación: asegurar que estamos vinculando tipos diferentes
+                                    val usuarioActualEsFamiliar = type.contains("FAMILIAR", ignoreCase = true)
+                                    val usuarioBuscadoEsFamiliar = user.tipo.contains("FAMILIAR", ignoreCase = true)
+
+                                    if (usuarioActualEsFamiliar == usuarioBuscadoEsFamiliar) {
+                                        mensaje = "Solo puedes vincular usuarios de tipo diferente:\n" +
+                                                "Tú eres $type y estás intentando vincular a ${user.tipo}"
+                                        isLoading = false
+                                        return@launch
+                                    }
+
+                                    // Lógica de vinculación correcta
                                     val ok = vincularUsuario(
                                         baseUrl = baseUrl,
-                                        adultoMayorId = if (user.tipo.contains("ADULTO_MAYOR", ignoreCase = true)) {
-                                            user.id
-                                        } else {
-                                            idUsuarioActual
-                                        },
-                                        familiarId = if (user.tipo.contains("FAMILIAR", ignoreCase = true)) {
-                                            user.id
-                                        } else {
-                                            idUsuarioActual
-                                        }
+                                        adultoMayorId = if (usuarioActualEsFamiliar) user.id else idUsuarioActual,
+                                        familiarId = if (usuarioActualEsFamiliar) idUsuarioActual else user.id
                                     )
 
                                     isLoading = false
@@ -381,11 +401,11 @@ fun VincularFamiliarScreen(
 
                                         // Llamar callback después de un breve delay
                                         scope.launch {
-                                            kotlinx.coroutines.delay(1500)
+                                            delay(1500)
                                             onVincularExitoso()
                                         }
                                     } else {
-                                        mensaje = "Error al vincular. Verifica los tipos de usuario."
+                                        mensaje = "Error al vincular. Revisa los datos."
                                         isError = true
                                     }
                                 }

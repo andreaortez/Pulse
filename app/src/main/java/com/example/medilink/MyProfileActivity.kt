@@ -2,6 +2,7 @@ package com.example.medilink
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material3.MaterialTheme
@@ -15,20 +16,23 @@ class MyProfileActivity : ComponentActivity() {
 
         val id = SessionManager.getUserId(this)
         val name = SessionManager.getUserName(this)
+        val Lname = SessionManager.getUserLastName(this)
+        val type = SessionManager.getUserType(this)
 
         if (id == null) {
             finish()
             return
         }
 
-        if(name == null){
+        if(type == null){
             return
         }
 
         setContent {
             MaterialTheme {
                 ProfileScreen(
-                    userName = name,
+                    userName = "$name $Lname" ,
+                    type = type,
                     onBackClick = { finish() },
                     onOptionClick = { option ->
                         when (option) {
@@ -40,18 +44,13 @@ class MyProfileActivity : ComponentActivity() {
 
                             }
                             ProfileOptionType.LIST -> {
-
+                                val intent = Intent(this, ListarUsuariosActivity::class.java)
+                                startActivity(intent)
                             }
                             ProfileOptionType.LOCATION -> {
 
                             }
-                            ProfileOptionType.SUBSCRIPTION -> {
-
-                            }
                             ProfileOptionType.CLEAR_CACHE -> {
-
-                            }
-                            ProfileOptionType.CLEAR_HISTORY -> {
 
                             }
                             ProfileOptionType.LOGOUT -> {
@@ -61,6 +60,11 @@ class MyProfileActivity : ComponentActivity() {
                     }
                 )
             }
+        }
+
+        fun AbrirActivity(view: View){
+            val intent = Intent(this, View::class.java)
+            startActivity(intent)
         }
     }
 }

@@ -14,18 +14,22 @@ import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Face
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.outlined.KeyboardArrowRight
-import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Divider
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -39,29 +43,44 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.medilink.R
+import com.example.medilink.ui.theme.AzulNegro
 
 // Colores
 import com.example.medilink.ui.theme.AzulOscuro
+import com.example.medilink.ui.theme.CelesteVivido
 
 enum class ProfileOptionType {
     EDITPROFILE,
     VINCULATE,
     LIST,
     LOCATION,
-    SUBSCRIPTION,
     CLEAR_CACHE,
-    CLEAR_HISTORY,
     LOGOUT
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     userName: String,
+    type: String,
     onBackClick: () -> Unit = {},
     onOptionClick: (ProfileOptionType) -> Unit = {}
 ) {
     val backgroundColor = Color(0xFFF5F5F5)
     val accentColor = Color(0xFFF44336)
+
+    val vincular = when (type) {
+        "FAMILIAR" -> "Vincular Adulto Mayor"
+        "ADULTO_MAYOR" -> "Vincular Familiar"
+        else -> "Vincular Usuario"
+    }
+
+    val listar = when (type) {
+        "FAMILIAR" -> "Listar usuarios encargados"
+        "ADULTO_MAYOR" -> "Listar Familiares"
+        else -> "Vincular Usuario"
+    }
+
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -76,31 +95,31 @@ fun ProfileScreen(
         Scaffold(
             containerColor = Color.Transparent,
             topBar = {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    IconButton(onClick = onBackClick) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Back",
-                            tint = Color.White
+                TopAppBar(
+                    title = {
+                        Text(
+                            text = "Mi Perfil",
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
                         )
-                    }
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    Text(
-                        text = "Mi Perfil",
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        ),
-                        modifier = Modifier.weight(1f),
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = onBackClick) {
+                            Icon(
+                                imageVector = Icons.Default.ArrowBack,
+                                contentDescription = "Back",
+                                tint = Color.White
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.Transparent,
+                        titleContentColor = AzulNegro,
+                        navigationIconContentColor = AzulNegro
                     )
-                }
+                )
             }
         ) { paddingValues ->
             Column(
@@ -158,12 +177,12 @@ fun ProfileScreen(
 
                         ProfileOptionRow(
                             icon = Icons.Default.Face,
-                            label = "Vincular Familiar",
+                            label = vincular,
                         ) { onOptionClick(ProfileOptionType.VINCULATE) }
 
                         ProfileOptionRow(
-                            icon = Icons.Default.Face,
-                            label = "Listar usuarios encargados",
+                            icon = Icons.Default.List,
+                            label = listar,
                         ) { onOptionClick(ProfileOptionType.LIST) }
 
                         ProfileOptionRow(
@@ -171,22 +190,12 @@ fun ProfileScreen(
                             label = "Location",
                         ) { onOptionClick(ProfileOptionType.LOCATION) }
 
-                        ProfileOptionRow(
-                            icon = Icons.Outlined.Star,
-                            label = "Subscription",
-                        ) { onOptionClick(ProfileOptionType.SUBSCRIPTION) }
-
                         Divider(modifier = Modifier.padding(vertical = 8.dp))
 
                         ProfileOptionRow(
                             icon = Icons.Default.Delete,
                             label = "Clear cache",
                         ) { onOptionClick(ProfileOptionType.CLEAR_CACHE) }
-
-                        ProfileOptionRow(
-                            icon = Icons.Default.Refresh,
-                            label = "Clear history",
-                        ) { onOptionClick(ProfileOptionType.CLEAR_HISTORY) }
 
                         Divider(modifier = Modifier.padding(vertical = 8.dp))
 
@@ -247,7 +256,8 @@ private fun ProfileOptionRow(
 fun ProfileScreenPreview() {
     MaterialTheme {
         ProfileScreen(
-            userName = "Charlotte King"
+            userName = "Charlotte King",
+            type = "FAMILIAR"
         )
     }
 }
