@@ -8,6 +8,9 @@ import androidx.activity.compose.setContent
 import androidx.compose.material3.MaterialTheme
 import com.example.medilink.ui.perfil.ProfileScreen
 import com.example.medilink.ui.perfil.ProfileOptionType
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.widget.Toast
 
 class MyProfileActivity : ComponentActivity() {
 
@@ -40,19 +43,24 @@ class MyProfileActivity : ComponentActivity() {
                                 val intent = Intent(this, VincularFamiliarActivity::class.java)
                                 startActivity(intent)
                             }
+
                             ProfileOptionType.EDITPROFILE -> {
 
                             }
+
                             ProfileOptionType.LIST -> {
                                 val intent = Intent(this, ListarUsuariosActivity::class.java)
                                 startActivity(intent)
                             }
-                            ProfileOptionType.LOCATION -> {
 
-                            }
-                            ProfileOptionType.CLEAR_CACHE -> {
+                            ProfileOptionType.COPY -> {
+                                val clipboard = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
+                                val clip = ClipData.newPlainText("ID de usuario", id)
+                                clipboard.setPrimaryClip(clip)
 
+                                Toast.makeText(this, "ID copiado al portapapeles", Toast.LENGTH_SHORT).show()
                             }
+
                             ProfileOptionType.LOGOUT -> {
 
                             }

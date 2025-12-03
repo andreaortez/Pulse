@@ -28,6 +28,7 @@ import com.example.medilink.ui.theme.CelesteVivido
 import com.example.medilink.ui.theme.CelesteClaro
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import kotlinx.coroutines.delay
 
@@ -288,6 +289,16 @@ fun VincularFamiliarScreen(
 
             // Tarjeta de usuario encontrado
             usuario?.let { user ->
+                val esAdultoMayor = user.tipo.equals("ADULTO_MAYOR", ignoreCase = true)
+                val tipoNormalizado = when (user.tipo.uppercase()) {
+                    "ADULTO_MAYOR" -> "Adulto mayor"
+                    "FAMILIAR"     -> "Familiar"
+                    else -> user.tipo
+                        .replace("_", " ")
+                        .lowercase()
+                        .replaceFirstChar { it.titlecase() }
+                }
+
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
@@ -297,33 +308,23 @@ fun VincularFamiliarScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(24.dp)
+                            .padding(20.dp)
                     ) {
                         // Encabezado de usuario
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            val esAdultoMayor = user.tipo.equals("ADULTO_MAYOR", ignoreCase = true)
-                            val tipoNormalizado = when (user.tipo.uppercase()) {
-                                "ADULTO_MAYOR" -> "Adulto mayor"
-                                "FAMILIAR"     -> "Familiar"
-                                else -> user.tipo
-                                    .replace("_", " ")
-                                    .lowercase()
-                                    .replaceFirstChar { it.titlecase() }
-                            }
-
                             Box(
                                 modifier = Modifier
                                     .size(50.dp)
+                                    .clip(CircleShape)
                                     .background(
-                                        color = if (esAdultoMayor) {
+                                        if (esAdultoMayor) {
                                             CelesteVivido.copy(alpha = 0.2f)
                                         } else {
                                             AzulNegro.copy(alpha = 0.2f)
-                                        },
-                                        shape = CircleShape
+                                        }
                                     ),
                                 contentAlignment = Alignment.Center
                             ) {
@@ -348,32 +349,59 @@ fun VincularFamiliarScreen(
                                 Text(
                                     text = "${user.nombre} ${user.apellido}",
                                     style = MaterialTheme.typography.titleMedium.copy(
-                                        fontWeight = FontWeight.Bold,
+                                        fontWeight = FontWeight.SemiBold,
                                         color = AzulNegro
                                     )
                                 )
-                                Text(
-                                    text = tipoNormalizado,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = if (esAdultoMayor) {
-                                        CelesteVivido
-                                    } else {
-                                        AzulNegro.copy(alpha = 0.7f)
-                                    }
-                                )
+
+                                Spacer(modifier = Modifier.height(4.dp))
+
+                                val chipBgColor = if (esAdultoMayor) {
+                                    CelesteVivido.copy(alpha = 0.12f)
+                                } else {
+                                    AzulNegro.copy(alpha = 0.12f)
+                                }
+
+                                val chipTextColor = if (esAdultoMayor) {
+                                    CelesteVivido
+                                } else {
+                                    AzulNegro
+                                }
+
+                                Box(
+                                    modifier = Modifier
+                                        .background(
+                                            color = chipBgColor,
+                                            shape = RoundedCornerShape(8.dp)
+                                        )
+                                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                                ) {
+                                    Text(
+                                        text = tipoNormalizado,
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = chipTextColor
+                                    )
+                                }
                             }
+
+                            Icon(
+                                imageVector = Icons.Default.Person,
+                                contentDescription = "Usuario",
+                                modifier = Modifier.size(24.dp),
+                                tint = AzulNegro.copy(alpha = 0.5f)
+                            )
                         }
 
                         Spacer(modifier = Modifier.height(24.dp))
 
-                        // Botón de vincular
+                        // Botón de vincular (lo de antes, igual)
                         Button(
                             onClick = {
                                 scope.launch {
                                     isLoading = true
                                     mensaje = null
 
-                                    // Validación: asegurar que estamos vinculando tipos diferentes
                                     val usuarioActualEsFamiliar = type.contains("FAMILIAR", ignoreCase = true)
                                     val usuarioBuscadoEsFamiliar = user.tipo.contains("FAMILIAR", ignoreCase = true)
 
@@ -384,11 +412,10 @@ fun VincularFamiliarScreen(
                                         return@launch
                                     }
 
-                                    // Lógica de vinculación correcta
                                     val ok = vincularUsuario(
                                         baseUrl = baseUrl,
                                         adultoMayorId = if (usuarioActualEsFamiliar) user.id else idUsuarioActual,
-                                        familiarId = if (usuarioActualEsFamiliar) idUsuarioActual else user.id
+                                        familiarId   = if (usuarioActualEsFamiliar) idUsuarioActual else user.id
                                     )
 
                                     isLoading = false
@@ -399,7 +426,6 @@ fun VincularFamiliarScreen(
                                         usuario = null
                                         idTexto = ""
 
-                                        // Llamar callback después de un breve delay
                                         scope.launch {
                                             delay(1500)
                                             onVincularExitoso()
@@ -435,20 +461,6 @@ fun VincularFamiliarScreen(
                                 )
                             }
                         }
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        Text(
-                            text = if (user.tipo.contains("ADULTO_MAYOR", ignoreCase = true)) {
-                                "Vas a convertirte en familiar responsable de este adulto mayor."
-                            } else {
-                                "Vas a vincular a este familiar como tu encargado."
-                            },
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color.Gray,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth()
-                        )
                     }
                 }
             }
@@ -538,8 +550,8 @@ suspend fun vincularUsuario(
     return withContext(Dispatchers.IO) {
         try {
             val bodyJson = JSONObject().apply {
-                put("adultoMayorId", adultoMayorId)
-                put("familiarId", familiarId)
+                put("id_usuario", adultoMayorId)
+                put("id_familiar", familiarId)
             }
 
             val url = URL("$baseUrl/asignar-familiar")

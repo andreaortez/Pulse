@@ -1,14 +1,11 @@
 package com.example.medilink.ui.components
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -19,7 +16,6 @@ import com.example.medilink.ui.theme.CelesteVivido
 import com.example.medilink.ui.theme.AzulNegro
 import com.example.medilink.ui.theme.AzulOscuro
 import com.example.medilink.ui.theme.CelesteClaro
-import org.w3c.dom.Text
 
 data class Alert(
     val id: String,

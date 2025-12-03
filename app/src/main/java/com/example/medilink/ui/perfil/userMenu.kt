@@ -26,7 +26,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -36,8 +35,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -53,8 +54,7 @@ enum class ProfileOptionType {
     EDITPROFILE,
     VINCULATE,
     LIST,
-    LOCATION,
-    CLEAR_CACHE,
+    COPY,
     LOGOUT
 }
 
@@ -66,9 +66,6 @@ fun ProfileScreen(
     onBackClick: () -> Unit = {},
     onOptionClick: (ProfileOptionType) -> Unit = {}
 ) {
-    val backgroundColor = Color(0xFFF5F5F5)
-    val accentColor = Color(0xFFF44336)
-
     val vincular = when (type) {
         "FAMILIAR" -> "Vincular Adulto Mayor"
         "ADULTO_MAYOR" -> "Vincular Familiar"
@@ -76,7 +73,7 @@ fun ProfileScreen(
     }
 
     val listar = when (type) {
-        "FAMILIAR" -> "Listar usuarios encargados"
+        "FAMILIAR" -> "Listar Usuarios Afiliados"
         "ADULTO_MAYOR" -> "Listar Familiares"
         else -> "Vincular Usuario"
     }
@@ -151,7 +148,13 @@ fun ProfileScreen(
                                 .clip(CircleShape)
                         ) {
                             Image(
-                                painter = painterResource(id = R.drawable.adulto_mayor),
+                                painter = painterResource(
+                                    id = if(type == "FAMILIAR"){
+                                        R.drawable.familiar
+                                    }else{
+                                        R.drawable.adulto_mayor
+                                    }
+                                ),
                                 contentDescription = "Avatar",
                                 modifier = Modifier.matchParentSize()
                             )
@@ -175,27 +178,26 @@ fun ProfileScreen(
                             label = "Editar Perfil",
                         ) { onOptionClick(ProfileOptionType.EDITPROFILE) }
 
+                        Divider(modifier = Modifier.padding(vertical = 8.dp))
+
+                        ProfileOptionRow(
+                            icon = ImageVector.vectorResource(id = R.drawable.ic_copy),
+                            label = "Copiar ID",
+                        ) { onOptionClick(ProfileOptionType.COPY) }
+
+                        Divider(modifier = Modifier.padding(vertical = 8.dp))
+
                         ProfileOptionRow(
                             icon = Icons.Default.Face,
                             label = vincular,
                         ) { onOptionClick(ProfileOptionType.VINCULATE) }
 
+                        Divider(modifier = Modifier.padding(vertical = 8.dp))
+
                         ProfileOptionRow(
                             icon = Icons.Default.List,
                             label = listar,
                         ) { onOptionClick(ProfileOptionType.LIST) }
-
-                        ProfileOptionRow(
-                            icon = Icons.Default.LocationOn,
-                            label = "Location",
-                        ) { onOptionClick(ProfileOptionType.LOCATION) }
-
-                        Divider(modifier = Modifier.padding(vertical = 8.dp))
-
-                        ProfileOptionRow(
-                            icon = Icons.Default.Delete,
-                            label = "Clear cache",
-                        ) { onOptionClick(ProfileOptionType.CLEAR_CACHE) }
 
                         Divider(modifier = Modifier.padding(vertical = 8.dp))
 

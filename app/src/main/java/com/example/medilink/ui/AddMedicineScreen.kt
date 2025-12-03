@@ -32,9 +32,10 @@ import kotlinx.coroutines.launch
 import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.TextFieldDefaults // si lo necesitas para otras cosas
-
 
 //components
 import com.example.medilink.ui.components.MedicineFormChip
@@ -51,15 +52,23 @@ import org.json.JSONArray
 import java.text.SimpleDateFormat
 import java.util.Locale
 
+data class Usuario(
+    val id: String,
+    val nombre: String,
+    val apellido: String
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddMedicineScreen(
     onBackClick: () -> Unit = {},
     onDoneClick: () -> Unit = {},
     idUsuario: String,
+    type: String,
     existingMedicine: MedicineUi? = null
 ) {
-    val backUrl = BuildConfig.MEDS_URL
+    val medsUrl = BuildConfig.MEDS_URL
+    val usersUrl = BuildConfig.USERS_URL
 
     var medicineName by remember(existingMedicine) {
         mutableStateOf(existingMedicine?.name ?: "")
@@ -72,6 +81,16 @@ fun AddMedicineScreen(
     var endDateDisplay by remember { mutableStateOf("") }
     var startDateBackend by remember { mutableStateOf("") }
     var endDateBackend by remember { mutableStateOf("") }
+
+    var adultosMayores by remember { mutableStateOf<List<Usuario>>(emptyList()) }
+    var adultoSeleccionado by remember { mutableStateOf<Usuario?>(null) }
+    var expanded by remember { mutableStateOf(false) }
+
+    if (type == "FAMILIAR") {
+        LaunchedEffect(idUsuario) {
+            adultosMayores = buscarAdultos(usersUrl, idUsuario)
+        }
+    }
 
     // HORAS DE RECORDATORIO
     val reminderTimes = remember { mutableStateListOf<String>() }
@@ -147,15 +166,22 @@ fun AddMedicineScreen(
                             return@launch
                         }
 
+                        val id =
+                            if(type=="FAMILIAR"){
+                                adultoSeleccionado!!.id
+                            }else{
+                                idUsuario
+                            }
+
                         val success = createMedicine(
-                            baseUrl = "$backUrl/registerMed",
+                            baseUrl = "$medsUrl/registerMed",
                             nombre = medicineName,
                             cantidad = amount,
                             tipo = formas[selectedForm],
                             fechaInicio = startDateBackend,
                             fechaFin = endDateBackend,
                             horas = reminderTimes.toList(),
-                            idUsuario = idUsuario
+                            idUsuario = id
                         )
 
                         if (success) {
@@ -193,7 +219,8 @@ fun AddMedicineScreen(
                     fontSize = 20.sp
                 )
             }
-        }
+        },
+        containerColor = Color.White
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -283,6 +310,73 @@ fun AddMedicineScreen(
                         }
                     }
                 )
+            }
+
+            if(type == "FAMILIAR") {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 24.dp),
+                ) {
+                    Text(
+                        text = "Adulto Mayor",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(bottom = 4.dp),
+                        color = Color.DarkGray,
+                    )
+
+                    ExposedDropdownMenuBox(
+                        expanded = expanded,
+                        onExpandedChange = { expanded = !expanded },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        OutlinedTextField(
+                            readOnly = true,
+                            value = adultoSeleccionado?.let { "${it.nombre} ${it.apellido}" } ?: "",
+                            onValueChange = { },
+                            placeholder = { Text("Selecciona un adulto mayor") },
+                            modifier = Modifier
+                                .menuAnchor()
+                                .fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = Azul,
+                                unfocusedBorderColor = Color.LightGray,
+                                cursorColor = Azul,
+                                focusedLabelColor = Azul,
+                                focusedTextColor = AzulNegro
+                            ),
+                            trailingIcon = {
+                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                            },
+                            singleLine = true
+                        )
+
+                        ExposedDropdownMenu(
+                            expanded = expanded,
+                            containerColor = Color.White,
+                            onDismissRequest = { expanded = false }
+                        ) {
+                            adultosMayores.forEach { adulto ->
+                                DropdownMenuItem(
+                                    modifier = Modifier.background(Color.White),
+                                    text = {
+                                        Text(
+                                            text = "${adulto.nombre} ${adulto.apellido}",
+                                            color = AzulNegro
+                                        )
+                                    },
+                                    onClick = {
+                                        adultoSeleccionado = adulto
+                                        expanded = false
+                                    }
+                                )
+                            }
+                        }
+
+                    }
+                }
             }
 
             Text(
@@ -413,6 +507,7 @@ fun AddMedicineScreenPreview() {
             onBackClick = {},
             onDoneClick = {},
             idUsuario = "previewUser",
+            type = "FAMILIAR",
             existingMedicine = null
         )
     }
@@ -432,7 +527,6 @@ suspend fun createMedicine(
         try {
             val cantInt = cantidad.toIntOrNull() ?: 1
 
-            // 1) Crear medicamento
             val bodyJson = JSONObject().apply {
                 put("nombre", nombre)
                 put("cantidad", cantInt)
@@ -443,7 +537,7 @@ suspend fun createMedicine(
                 put("id_usuario", idUsuario)
             }
 
-            val url = URL(baseUrl) // ej: http://10.0.2.2:3000/meds/registerMed
+            val url = URL(baseUrl)
             val conn = (url.openConnection() as HttpURLConnection).apply {
                 requestMethod = "POST"
                 connectTimeout = 10_000
@@ -460,7 +554,6 @@ suspend fun createMedicine(
             val responseCode = conn.responseCode
 
             if (responseCode in 200..299) {
-                // Leer cuerpo para obtener el _id del medicamento
                 val responseText = conn.inputStream.bufferedReader().use { it.readText() }
                 conn.disconnect()
 
@@ -480,8 +573,6 @@ suspend fun createMedicine(
                         val isoFormatter = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
                         val fechaIso = isoFormatter.format(date!!)
 
-                        // baseUrl = ".../meds/registerMed"
-                        // -> reminderUrl = ".../meds/agregarRecordatorio"
                         val reminderUrlStr = baseUrl.replace("/registerMed", "/agregarRecordatorio")
                         val reminderUrl = URL(reminderUrlStr)
 
@@ -526,3 +617,57 @@ suspend fun createMedicine(
         }
     }
 }
+
+suspend fun buscarAdultos(
+    baseUrl: String,
+    id: String
+): List<Usuario> {
+    return withContext(Dispatchers.IO) {
+        try {
+            val url = URL("$baseUrl/$id/adultos-mayores")
+            val conn = (url.openConnection() as HttpURLConnection).apply {
+                requestMethod = "GET"
+                connectTimeout = 10_000
+                readTimeout = 10_000
+            }
+
+            val responseCode = conn.responseCode
+
+            if (responseCode in 200..299) {
+                val responseText = conn.inputStream.bufferedReader().use { it.readText() }
+                conn.disconnect()
+
+                val root = JSONObject(responseText)
+
+                val adultosArray = root.optJSONArray("adultosMayores")
+                    ?: return@withContext emptyList<Usuario>()
+
+                val resultado = mutableListOf<Usuario>()
+
+                for (i in 0 until adultosArray.length()) {
+                    val item = adultosArray.getJSONObject(i)
+                    resultado.add(
+                        Usuario(
+                            id = item.optString("_id", ""),
+                            nombre = item.optString("nombre", ""),
+                            apellido = item.optString("apellido", "")
+                        )
+                    )
+                }
+
+                resultado
+            } else {
+                val errorText = conn.errorStream?.bufferedReader()?.use { it.readText() }
+                conn.disconnect()
+                println("Error get adultos-mayores: $errorText")
+                emptyList()
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyList()
+        }
+    }
+}
+
+
+

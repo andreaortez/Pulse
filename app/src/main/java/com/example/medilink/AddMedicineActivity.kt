@@ -14,8 +14,14 @@ class AddMedicineActivity : ComponentActivity() {
 
         val med : MedicineUi? = intent.getParcelableExtra("extra_medicine")
         val id = SessionManager.getUserId(this)
+        val type = SessionManager.getUserType(this)
 
         if (id == null) {
+            finish()
+            return
+        }
+
+        if (type == null) {
             finish()
             return
         }
@@ -28,7 +34,8 @@ class AddMedicineActivity : ComponentActivity() {
                         finish()
                     },
                     existingMedicine = med,
-                    idUsuario = id.toString()
+                    idUsuario = id.toString(),
+                    type = type
                 )
             }
         }

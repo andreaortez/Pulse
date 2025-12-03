@@ -28,14 +28,9 @@ class ListarUsuariosActivity : ComponentActivity() {
         setContent {
             MaterialTheme {
                 ListarUsuariosScreen(
-                    idUsuarioActual = "id_del_usuario_actual",
-                    tipoUsuarioActual = "FAMILIAR", // o "ADULTO_MAYOR"
-                    onBackClick = { finish() },
-                    onAgregarAfiliado = {
-                        // Navegar a pantalla de vinculación
-                        val intent = Intent(this, VincularFamiliarActivity::class.java)
-                        startActivity(intent)
-                    },
+                    idUsuarioActual = id,
+                    tipoUsuarioActual = type,
+                    onBackClick = { finish() }
                 )
             }
         }
