@@ -34,11 +34,30 @@ import com.example.medilink.ui.theme.AzulOscuro
 import com.example.medilink.ui.theme.CelesteVivido
 import androidx.compose.material3.OutlinedTextFieldDefaults
 
+//imports para monitoreo de salud
+import androidx.compose.runtime.LaunchedEffect
+import androidx.health.connect.client.HealthConnectClient
+import androidx.health.connect.client.records.BloodPressureRecord
+import androidx.health.connect.client.records.BodyTemperatureRecord
+import androidx.health.connect.client.records.HeartRateRecord
+import androidx.health.connect.client.request.ReadRecordsRequest
+import androidx.health.connect.client.time.TimeRangeFilter
+import java.time.Instant
+import java.time.temporal.ChronoUnit
+import android.os.Build
+import android.util.Log
+import com.example.medilink.BuildConfig
+import com.example.medilink.SessionManager
+import org.json.JSONObject
+import java.net.HttpURLConnection
+import java.net.URL
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VitalSignsScreen(
     onBackClick: () -> Unit = {},
-    onChatbotClick: (bpm: String, pressure: String, temperature: String) -> Unit = { _, _, _ -> }
+    onChatbotClick: (bpm: String, pressure: String, temperature: String) -> Unit = { _, _, _ -> },
+    idUsuario: String
 ) {
     Surface(                        
         modifier = Modifier.fillMaxSize(),
@@ -48,7 +67,158 @@ fun VitalSignsScreen(
     var temperature by remember { mutableStateOf("36.5") }
 
     val context = LocalContext.current
+    LaunchedEffect(Unit){
+        bpm = "999";
+        Log.d("VitalSigns", "LLEGUE 0")
+        val sdkStatus = HealthConnectClient.getSdkStatus(
+            context,
+            "com.google.android.apps.healthdata"
+        )
 
+        if (sdkStatus == HealthConnectClient.SDK_AVAILABLE && !(Build.VERSION.SDK_INT < Build.VERSION_CODES.O)) {
+            if (!(Build.VERSION.SDK_INT < Build.VERSION_CODES.O)) {
+                val client = HealthConnectClient.getOrCreate(context);
+
+                //consiguiendo timeframes
+                val now = Instant.now();
+
+                val time = TimeRangeFilter.after(
+                    now.minus(1, ChronoUnit.MINUTES)
+                )
+
+                try{
+                    val bpm_report = client.readRecords(
+                        ReadRecordsRequest(
+                            recordType = HeartRateRecord::class,
+                            timeRangeFilter = time
+                        )
+                    );
+
+                    val latestBPM = bpm_report.records.maxByOrNull { it.startTime }
+                    val latestBpmSample = latestBPM?.samples?.maxByOrNull { it.time }
+
+                    latestBpmSample?.beatsPerMinute?.toInt()?.let { bpmValue ->
+                        bpm = bpmValue.toString()
+                    }
+
+                    val pressure_report = client.readRecords(
+                        ReadRecordsRequest(
+                            recordType = BloodPressureRecord::class,
+                            timeRangeFilter = time
+                        )
+                    );
+                    val latestBP = pressure_report.records.maxByOrNull { it.time }
+                    var num = latestBP?.systolic?.inMillimetersOfMercury?.toInt();
+                    var den = latestBP?.diastolic?.inMillimetersOfMercury?.toInt();
+                    if(num != null && den != null){
+                        pressure = Integer.toString(num)+ "/" + Integer.toString(den);
+                    }
+                    val temperature_report = client.readRecords(
+                        ReadRecordsRequest(
+                            recordType = BodyTemperatureRecord::class,
+                            timeRangeFilter = time
+                        )
+                    );
+                    val latestTemp = temperature_report.records.maxByOrNull { it.time }?.temperature?.inCelsius
+
+
+                    latestTemp ?.let { temp ->
+                        temperature = String.format("%.1f", temp)
+                    }
+
+                    //escribir dentro de la tabla de registros
+
+
+                }catch(e : Exception){
+
+                }
+            }
+
+        }else{
+            //generar los datos aleatorios para la simulación
+            val url = URL(BuildConfig.VITALS_URL + "/simulate")
+            Log.d("VitalSigns", "LLEGUE 1")
+            val bodyJson = JSONObject().apply {}
+
+            val conn = (url.openConnection() as HttpURLConnection).apply {
+                requestMethod = "POST"
+                connectTimeout = 10_000
+                readTimeout = 10_000
+                doOutput = true
+                setRequestProperty("Content-Type", "application/json; charset=utf-8")
+            }
+            Log.d("VitalSigns", "LLEGUE 2")
+            conn.outputStream.use { os ->
+                val input = bodyJson.toString().toByteArray(Charsets.UTF_8)
+                os.write(input, 0, input.size)
+            }
+
+            val responseCode = conn.responseCode
+            val responseText = if (responseCode in 200..299) {
+                conn.inputStream.bufferedReader().use { it.readText() }
+            } else {
+                conn.errorStream?.bufferedReader()?.use { it.readText() }
+                    ?: "Error HTTP $responseCode"
+            }
+            conn.disconnect()
+            Log.d("VitalSigns", "LLEGUE 3")
+            try {
+                val json = JSONObject(responseText)
+
+                val bpmValue = json.optInt("bpm", -1)
+                if (bpmValue != -1) {
+                    bpm = bpmValue.toString()
+                }
+
+                val presionValue = json.optString("presion", "")
+                if (presionValue.isNotBlank()) {
+                    pressure = presionValue
+                }
+
+                val tempValue = json.optDouble("temperatura", Double.NaN)
+                if (!tempValue.isNaN()) {
+                    temperature = String.format("%.1f", tempValue)
+                }
+
+                Log.d("VitalSigns", "LLEGUE 4")
+            } catch (e: Exception) {
+                e.printStackTrace()
+
+            }
+        }
+
+        //escribir los datos como nuevo registros
+
+        val bodyJson = JSONObject().apply {
+            put("adultoMayorId", idUsuario)
+            put("bpm", bpm)
+            put("temperatura", temperature)
+            put("presion", pressure)
+        }
+
+        val url = URL(BuildConfig.VITALS_URL + "/")
+        val conn = (url.openConnection() as HttpURLConnection).apply {
+            requestMethod = "POST"
+            connectTimeout = 10_000
+            readTimeout = 10_000
+            doOutput = true
+            setRequestProperty("Content-Type", "application/json; charset=utf-8")
+        }
+
+        conn.outputStream.use { os ->
+            val input = bodyJson.toString().toByteArray(Charsets.UTF_8)
+            os.write(input, 0, input.size)
+        }
+
+        val responseCode = conn.responseCode
+        val responseText = if (responseCode in 200..299) {
+            conn.inputStream.bufferedReader().use { it.readText() }
+        } else {
+            conn.errorStream?.bufferedReader()?.use { it.readText() }
+                ?: "Error HTTP $responseCode"
+        }
+        conn.disconnect()
+    }
     val gradient = Brush.verticalGradient(
         colors = listOf(
             Color(0xFF2196F3),
@@ -424,6 +594,6 @@ private fun VitalInputCard(
 @Composable
 fun VitalSignsScreenPreview() {
     MaterialTheme {
-        VitalSignsScreen()
+        VitalSignsScreen(idUsuario = "previewUser")
     }
 }
