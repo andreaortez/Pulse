@@ -3,6 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"
+        tools:ignore="ProtectedPermissions" />
 
     <application
         android:allowBackup="true"
@@ -15,6 +17,13 @@
         android:theme="@style/Theme.MediLink"
         android:usesCleartextTraffic="true"
         tools:targetApi="31">
+        <activity
+            android:name=".ui.alerts.AlertActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Material3.DayNight.NoActionBar" />
+        <receiver
+            android:name=".ui.alerts.MedAlertReceiver"
+            android:exported="true" />
         <activity
             android:name=".AddMedicineActivity"
             android:exported="false" />

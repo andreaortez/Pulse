@@ -1,11 +1,14 @@
 package com.example.medilink.ui.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -20,7 +23,6 @@ import com.example.medilink.ui.theme.CelesteClaro
 data class Alert(
     val id: String,
     val mensaje: String,
-    val gravedad: String,
     val estado: String
 )
 
@@ -28,53 +30,98 @@ data class Alert(
 fun AlertCard(
     alert: Alert,
     onMarkAsNotified: (String) -> Unit,
+    onMarkAsResolved: (String) -> Unit,
     onDismissRequest: () -> Unit,
 ) {
-    val cardBackgroundColor = if (alert.gravedad == "CRITICA") CelesteVivido else CelesteClaro
-    val buttonTextColor = if (alert.gravedad == "CRITICA") Color.White else AzulNegro
-
     AlertDialog(
-        containerColor = cardBackgroundColor,
+        onDismissRequest = { onDismissRequest() },
+        shape = RoundedCornerShape(24.dp),
+        containerColor = Color.White,
+        iconContentColor = Color.White,
+        textContentColor = AzulNegro,
+        titleContentColor = AzulOscuro,
         icon = {
-            Icon(Icons.Default.Notifications, contentDescription = "Notificacion")
+            Box(
+                modifier = Modifier
+                    .size(56.dp)
+                    .background(color = CelesteVivido, shape = CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Notifications,
+                    contentDescription = "Notificación de medicamento",
+                    tint = Color.White
+                )
+            }
         },
         title = {
-            Text(text = alert.estado)
+            Column {
+                Text(
+                    text = "Recordatorio de medicamento",
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 18.sp
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+
+                // 🔹 Chip centrado horizontalmente
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Surface(
+                        color = CelesteClaro,
+                        shape = RoundedCornerShape(50)
+                    ) {
+                        Text(
+                            text = alert.estado,
+                            modifier = Modifier
+                                .padding(horizontal = 10.dp, vertical = 4.dp),
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = AzulOscuro
+                        )
+                    }
+                }
+            }
         },
         text = {
             Text(
                 text = alert.mensaje,
                 fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.Medium,
                 color = AzulNegro,
-                modifier = Modifier.padding(bottom = 8.dp)
+                modifier = Modifier.padding(top = 4.dp, bottom = 8.dp)
             )
         },
-        onDismissRequest = {
-            onDismissRequest()
-        },
         confirmButton = {
-            TextButton(
+            Button(
                 onClick = { onMarkAsNotified(alert.id) },
                 shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = AzulOscuro)
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = CelesteVivido,
+                    contentColor = Color.White
+                )
             ) {
                 Text(
                     text = "Notificada",
-                    color = buttonTextColor,
                     fontSize = 14.sp
                 )
             }
         },
         dismissButton = {
-            TextButton(
-                onClick = { onMarkAsNotified(alert.id) },
+            OutlinedButton(
+                onClick = { onMarkAsResolved(alert.id) },
                 shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = AzulOscuro)
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = AzulOscuro
+                ),
+                border = ButtonDefaults.outlinedButtonBorder.copy(
+                    width = 1.dp,
+                    brush = androidx.compose.ui.graphics.SolidColor(AzulOscuro)
+                )
             ) {
                 Text(
-                    text = "Notificada",
-                    color = buttonTextColor,
+                    text = "Resuelta",
                     fontSize = 14.sp
                 )
             }
@@ -86,14 +133,15 @@ fun AlertCard(
 fun AlertsList(
     alerts: List<Alert>,
     onMarkAsNotified: (String) -> Unit,
-    onMarkAsResolved: () -> Unit,
+    onMarkAsResolved: (String) -> Unit,
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         alerts.forEach { alert ->
             AlertCard(
                 alert = alert,
                 onMarkAsNotified = onMarkAsNotified,
-                onDismissRequest = onMarkAsResolved
+                onMarkAsResolved = onMarkAsResolved,
+                onDismissRequest = { /* opcional */ }
             )
         }
     }
@@ -104,14 +152,13 @@ fun AlertsList(
 fun AlertCardPreview() {
     val exampleAlert = Alert(
         id = "1",
-        mensaje = "Alerta crítica: el valor de la presión arterial es 180/120 mmHg",
-        gravedad = "CRITICA",
+        mensaje = "Te toca tomar Loratadina 10 mg.",
         estado = "PENDIENTE"
     )
 
     AlertsList(
         alerts = listOf(exampleAlert),
-        onMarkAsNotified = {  },
-        onMarkAsResolved = {  }
+        onMarkAsNotified = { },
+        onMarkAsResolved = { }
     )
 }

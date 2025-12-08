@@ -26,6 +26,7 @@ android {
         debug {
             buildConfigField("String", "USERS_URL", "\"http://10.0.2.2:3000/users\"")
             buildConfigField("String", "MEDS_URL", "\"http://10.0.2.2:3000/meds\"")
+            buildConfigField("String", "ALERTS_URL", "\"http://10.0.2.2:3000/alerts\"")
             buildConfigField("String", "CHATBOT_URL", "\"http://10.0.2.2:3000/chatbot\"")
             buildConfigField("String", "VITALS_URL", "\"http://10.0.2.2:3000/vitals\"")
 

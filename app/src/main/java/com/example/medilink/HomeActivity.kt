@@ -30,13 +30,8 @@ import com.example.medilink.ui.MedicineUi
 import com.example.medilink.ui.MedicinesAdapter
 import com.example.medilink.ui.VitalSigns.VitalSignsActivity
 import org.json.JSONArray
-
-data class Alert(
-    val id: String,
-    val mensaje: String,
-    val gravedad: String,
-    val estado: String
-)
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 
 data class AdultoVinculado(
     val id: String,
@@ -50,7 +45,8 @@ data class HomeReminder(
     val proximoRecordatorioTexto: String,
     val usuarioId: String,
     val forma: String,
-    val cantidad: Int
+    val cantidad: Int,
+    val horasDelDia: List<String>
 )
 
 class HomeActivity : AppCompatActivity() {
@@ -136,6 +132,19 @@ class HomeActivity : AppCompatActivity() {
                 selectedDateIso = selectedDate.format(DateTimeFormatter.ISO_LOCAL_DATE)
 
                 lifecycleScope.launch {
+                    //alertas
+                    val todayIso = java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ISO_LOCAL_DATE)
+
+                    val alertsEndpoint = if (userType.contains("FAMILIAR", ignoreCase = true)) {
+                        "$medsBaseUrl/for-today-familiar"
+                    } else {
+                        "$medsBaseUrl/by-date"
+                    }
+
+                    val remindersToday = obtenerRecordatoriosHome(alertsEndpoint, userId, todayIso)
+                    scheduleAlertsForToday(remindersToday)
+
+                    //medicamentos
                     val endpoint = if (userType.contains("FAMILIAR", ignoreCase = true)) {
                         "$medsBaseUrl/by-date-familiar"
                     } else {
@@ -162,6 +171,7 @@ class HomeActivity : AppCompatActivity() {
                         }
 
                         MedicineUi(
+                            id = reminder.medId,
                             name = reminder.nombre,
                             timeText = reminder.proximoRecordatorioTexto,
                             quantity = reminder.cantidad,
@@ -182,8 +192,36 @@ class HomeActivity : AppCompatActivity() {
                             },
                             onEditClick = { med ->
                                 openEditMedicine(med)
+                            },
+                            onDeleteClick = { med ->
+                                AlertDialog.Builder(this@HomeActivity)
+                                    .setTitle("Eliminar medicamento")
+                                    .setMessage("¿Seguro que quieres eliminar \"${med.name}\"?")
+                                    .setPositiveButton("Eliminar") { _, _ ->
+                                        lifecycleScope.launch {
+                                            val ok = deleteMedicine(medsBaseUrl, med.id)
+                                            if (ok) {
+                                                loadMedicines()
+                                                Toast.makeText(
+                                                    this@HomeActivity,
+                                                    "Medicamento eliminado",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            } else {
+                                                Toast.makeText(
+                                                    this@HomeActivity,
+                                                    "No se pudo eliminar el medicamento",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            }
+                                        }
+                                    }
+                                    .setNegativeButton("Cancelar", null)
+                                    .show()
                             }
                         )
+
+
                     }
                 }
             },
@@ -242,6 +280,20 @@ class HomeActivity : AppCompatActivity() {
 
         if (userId.isNotBlank()) {
             lifecycleScope.launch {
+                //alertas
+                val todayIso = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
+
+                val alertsEndpoint = if (userType.contains("FAMILIAR", ignoreCase = true)) {
+                    "$medsBaseUrl/for-today-familiar"
+                } else {
+                    "$medsBaseUrl/by-date"
+                }
+
+                val remindersToday = obtenerRecordatoriosHome(alertsEndpoint, userId, todayIso)
+                Log.d("HomeDebug", "Reminders para alertas hoy: ${remindersToday.size}")
+                scheduleAlertsForToday(remindersToday)
+
+
                 val endpoint = if (userType.contains("FAMILIAR", ignoreCase = true)) {
                     "$medsBaseUrl/by-date-familiar"
                 } else {
@@ -268,6 +320,7 @@ class HomeActivity : AppCompatActivity() {
                     }
 
                     MedicineUi(
+                        id = reminder.medId,
                         name = reminder.nombre,
                         timeText = reminder.proximoRecordatorioTexto,
                         quantity = reminder.cantidad,
@@ -289,8 +342,23 @@ class HomeActivity : AppCompatActivity() {
                         },
                         onEditClick = { med ->
                             openEditMedicine(med)
+                        },
+                        onDeleteClick = { med ->
+                            lifecycleScope.launch {
+                                val ok = deleteMedicine(medsBaseUrl, med.id)
+                                if (ok) {
+                                    loadMedicines()
+                                } else {
+                                    Toast.makeText(
+                                        this@HomeActivity,
+                                        "No se pudo eliminar el medicamento",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            }
                         }
                     )
+
                     rvMedicines.adapter = medicinesAdapter
                 }
             }
@@ -299,9 +367,30 @@ class HomeActivity : AppCompatActivity() {
         }
     }
 
+    @SuppressLint("NewApi")
     override fun onResume() {
         super.onResume()
         loadMedicines()
+
+        if (userId.isNotBlank()) {
+            lifecycleScope.launch {
+                val todayIso = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
+
+                val alertsEndpoint = if (userType.contains("FAMILIAR", ignoreCase = true)) {
+                    "$medsBaseUrl/for-today-familiar"
+                } else {
+                    "$medsBaseUrl/by-date"
+                }
+
+                val remindersToday = obtenerRecordatoriosHome(alertsEndpoint, userId, todayIso)
+                Log.d("HomeDebug", "[onResume] Reminders para alertas hoy: ${remindersToday.size}")
+                scheduleAlertsForToday(remindersToday)
+            }
+        }
+    }
+
+    companion object {
+        private const val ALERT_TIME_OFFSET_HOURS = 6
     }
 
     private fun loadMedicines() {
@@ -333,6 +422,7 @@ class HomeActivity : AppCompatActivity() {
                 }
 
                 MedicineUi(
+                    id = reminder.medId,
                     name = reminder.nombre,
                     timeText = reminder.proximoRecordatorioTexto,
                     quantity = reminder.cantidad,
@@ -354,8 +444,23 @@ class HomeActivity : AppCompatActivity() {
                     },
                     onEditClick = { med ->
                         openEditMedicine(med)
+                    },
+                    onDeleteClick = { med ->
+                        lifecycleScope.launch {
+                            val ok = deleteMedicine(medsBaseUrl, med.id)
+                            if (ok) {
+                                loadMedicines()
+                            } else {
+                                Toast.makeText(
+                                    this@HomeActivity,
+                                    "No se pudo eliminar el medicamento",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        }
                     }
                 )
+
 
                 rvMedicines.adapter = medicinesAdapter
             }
@@ -376,6 +481,74 @@ class HomeActivity : AppCompatActivity() {
         intent.putExtra("extra_medicine", medicine)
         startActivity(intent)
     }
+
+    //alertas
+    @SuppressLint("ObsoleteSdkInt")
+    private fun scheduleAlertsForToday(reminders: List<HomeReminder>) {
+        val alarmManager = getSystemService(ALARM_SERVICE) as android.app.AlarmManager
+        val now = System.currentTimeMillis()
+
+        Log.d("HomeDebug", "Programando alertas para ${reminders.size} medicamentos")
+
+        for (reminder in reminders) {
+            Log.d("HomeDebug", "Med: ${reminder.nombre} horas=${reminder.horasDelDia}")
+
+            for (hora in reminder.horasDelDia) {
+                val parts = hora.split(":")
+                if (parts.size < 2) continue
+
+                val hour = parts[0].toIntOrNull() ?: continue
+                val minute = parts[1].toIntOrNull() ?: continue
+
+                val cal = java.util.Calendar.getInstance().apply {
+                    timeInMillis = System.currentTimeMillis()
+                    set(java.util.Calendar.SECOND, 0)
+                    set(java.util.Calendar.MILLISECOND, 0)
+                    set(java.util.Calendar.HOUR_OF_DAY, hour)
+                    set(java.util.Calendar.MINUTE, minute)
+
+                    // 👉 TRUCO: compensar las 6 horas
+                    add(java.util.Calendar.HOUR_OF_DAY, ALERT_TIME_OFFSET_HOURS)
+                }
+
+                val triggerAt = cal.timeInMillis
+
+                Log.d(
+                    "HomeDebug",
+                    " -> ${reminder.nombre} @ $hora (offset=$ALERT_TIME_OFFSET_HOURS) final=${cal.time} millis=$triggerAt, now=$now, diff=${triggerAt - now}ms"
+                )
+
+                if (triggerAt <= now) {
+                    Log.d("HomeDebug", "   (saltada, ya pasó) $hora para ${reminder.nombre}")
+                    continue
+                }
+
+                val message = "Te toca tomar ${reminder.nombre} (${reminder.cantidad} ${reminder.forma})"
+
+                val intent = Intent(this, com.example.medilink.ui.alerts.MedAlertReceiver::class.java).apply {
+                    putExtra("alert_id", reminder.medId)
+                    putExtra("alert_message", message)
+                    putExtra("alert_state", "PENDIENTE")
+                }
+
+                val pending = android.app.PendingIntent.getBroadcast(
+                    this,
+                    (reminder.medId + hora).hashCode(),
+                    intent,
+                    android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
+                )
+
+                alarmManager.set(
+                    android.app.AlarmManager.RTC_WAKEUP,
+                    triggerAt,
+                    pending
+                )
+
+                Log.d("HomeDebug", "   ✔ Alarma programada para $hora (${reminder.nombre}) (con offset)")
+            }
+        }
+    }
+
 }
 
 suspend fun obtenerRecordatoriosHome(
@@ -386,7 +559,11 @@ suspend fun obtenerRecordatoriosHome(
     val resultado = mutableListOf<HomeReminder>()
 
     try {
-        val urlMeds = URL("$endpointUrl/$userId?date=$selectedDate")
+        val urlMeds = if (endpointUrl.contains("for-today-familiar")) {
+            URL("$endpointUrl/$userId")
+        } else {
+            URL("$endpointUrl/$userId?date=$selectedDate")
+        }
 
         val connMeds = (urlMeds.openConnection() as HttpURLConnection).apply {
             requestMethod = "GET"
@@ -421,11 +598,15 @@ suspend fun obtenerRecordatoriosHome(
             if (medId.isBlank()) continue
 
             val horasArray = med.optJSONArray("horas_recordatorio")
-            val horaRaw = if (horasArray != null && horasArray.length() > 0) {
-                horasArray.getString(0)
-            } else {
-                ""
+
+            val horasList = mutableListOf<String>()
+            if (horasArray != null) {
+                for (j in 0 until horasArray.length()) {
+                    horasList.add(horasArray.getString(j))    // "23:30", "00:05", etc.
+                }
             }
+
+            val horaRaw = horasList.firstOrNull() ?: ""
 
             val textoHora = if (horaRaw.isNotBlank()) {
                 try {
@@ -449,7 +630,8 @@ suspend fun obtenerRecordatoriosHome(
                     proximoRecordatorioTexto = textoHora,
                     usuarioId = usuarioId,
                     forma = forma,
-                    cantidad = cantidad
+                    cantidad = cantidad,
+                    horasDelDia = horasList
                 )
             )
         }
@@ -460,6 +642,35 @@ suspend fun obtenerRecordatoriosHome(
 
     resultado
 }
+
+suspend fun deleteMedicine(
+    medsBaseUrl: String,
+    medId: String
+): Boolean = withContext(Dispatchers.IO) {
+    try {
+        val url = URL("$medsBaseUrl/deleteMed")
+        val conn = (url.openConnection() as HttpURLConnection).apply {
+            requestMethod = "DELETE"
+            connectTimeout = 10_000
+            readTimeout = 10_000
+            doOutput = true
+            setRequestProperty("Content-Type", "application/json; charset=UTF-8")
+        }
+
+        val body = JSONObject().put("_id", medId).toString()
+        conn.outputStream.use { os ->
+            os.write(body.toByteArray(Charsets.UTF_8))
+        }
+
+        val code = conn.responseCode
+        conn.disconnect()
+        code in 200..299
+    } catch (e: Exception) {
+        e.printStackTrace()
+        false
+    }
+}
+
 
 
 suspend fun obtenerAdultosVinculados(
