@@ -27,7 +27,7 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
 
-        <!-- Botón EDITAR (alineado con el nombre) -->
+
         <ImageButton
             android:id="@+id/btnEdit"
             android:layout_width="28dp"
@@ -67,9 +67,7 @@
             android:textColor="#444444"
             android:textSize="14sp"
             app:layout_constraintStart_toStartOf="@id/tvTitle"
-            app:layout_constraintEnd_toStartOf="@id/checkTaken"
-            app:layout_constraintTop_toBottomOf="@id/tvTitle"
-            android:layout_marginEnd="8dp"/>
+            app:layout_constraintTop_toBottomOf="@id/tvTitle" />
 
         <!-- Cantidad + forma -->
         <TextView
@@ -81,19 +79,9 @@
             android:textColor="#777777"
             android:textSize="12sp"
             app:layout_constraintStart_toStartOf="@id/tvTime"
-            app:layout_constraintEnd_toStartOf="@id/checkTaken"
-            app:layout_constraintTop_toBottomOf="@id/tvTime"
-            android:layout_marginEnd="8dp"/>
+            app:layout_constraintTop_toBottomOf="@id/tvTime" />
 
         <!-- Checkbox: tomado / no tomado -->
-        <CheckBox
-            android:id="@+id/checkTaken"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:buttonTint="#0d6efd"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/btnEdit"
-            app:layout_constraintBottom_toBottomOf="parent"/>
 
         <ImageButton
             android:id="@+id/btnDeleteMed"
