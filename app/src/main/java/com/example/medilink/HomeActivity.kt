@@ -30,6 +30,9 @@ import com.example.medilink.ui.MedicineUi
 import com.example.medilink.ui.MedicinesAdapter
 import com.example.medilink.ui.VitalSigns.VitalSignsActivity
 import org.json.JSONArray
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
+
 
 data class Alert(
     val id: String,
@@ -162,6 +165,7 @@ class HomeActivity : AppCompatActivity() {
                         }
 
                         MedicineUi(
+                            id = reminder.medId,
                             name = reminder.nombre,
                             timeText = reminder.proximoRecordatorioTexto,
                             quantity = reminder.cantidad,
@@ -182,8 +186,36 @@ class HomeActivity : AppCompatActivity() {
                             },
                             onEditClick = { med ->
                                 openEditMedicine(med)
+                            },
+                            onDeleteClick = { med ->
+                                AlertDialog.Builder(this@HomeActivity)
+                                    .setTitle("Eliminar medicamento")
+                                    .setMessage("¿Seguro que quieres eliminar \"${med.name}\"?")
+                                    .setPositiveButton("Eliminar") { _, _ ->
+                                        lifecycleScope.launch {
+                                            val ok = deleteMedicine(medsBaseUrl, med.id)
+                                            if (ok) {
+                                                loadMedicines()
+                                                Toast.makeText(
+                                                    this@HomeActivity,
+                                                    "Medicamento eliminado",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            } else {
+                                                Toast.makeText(
+                                                    this@HomeActivity,
+                                                    "No se pudo eliminar el medicamento",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            }
+                                        }
+                                    }
+                                    .setNegativeButton("Cancelar", null)
+                                    .show()
                             }
                         )
+
+
                     }
                 }
             },
@@ -268,6 +300,7 @@ class HomeActivity : AppCompatActivity() {
                     }
 
                     MedicineUi(
+                        id = reminder.medId,
                         name = reminder.nombre,
                         timeText = reminder.proximoRecordatorioTexto,
                         quantity = reminder.cantidad,
@@ -289,8 +322,23 @@ class HomeActivity : AppCompatActivity() {
                         },
                         onEditClick = { med ->
                             openEditMedicine(med)
+                        },
+                        onDeleteClick = { med ->
+                            lifecycleScope.launch {
+                                val ok = deleteMedicine(medsBaseUrl, med.id)
+                                if (ok) {
+                                    loadMedicines()
+                                } else {
+                                    Toast.makeText(
+                                        this@HomeActivity,
+                                        "No se pudo eliminar el medicamento",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            }
                         }
                     )
+
                     rvMedicines.adapter = medicinesAdapter
                 }
             }
@@ -333,6 +381,7 @@ class HomeActivity : AppCompatActivity() {
                 }
 
                 MedicineUi(
+                    id = reminder.medId,
                     name = reminder.nombre,
                     timeText = reminder.proximoRecordatorioTexto,
                     quantity = reminder.cantidad,
@@ -354,8 +403,23 @@ class HomeActivity : AppCompatActivity() {
                     },
                     onEditClick = { med ->
                         openEditMedicine(med)
+                    },
+                    onDeleteClick = { med ->
+                        lifecycleScope.launch {
+                            val ok = deleteMedicine(medsBaseUrl, med.id)
+                            if (ok) {
+                                loadMedicines()
+                            } else {
+                                Toast.makeText(
+                                    this@HomeActivity,
+                                    "No se pudo eliminar el medicamento",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        }
                     }
                 )
+
 
                 rvMedicines.adapter = medicinesAdapter
             }
@@ -460,6 +524,35 @@ suspend fun obtenerRecordatoriosHome(
 
     resultado
 }
+
+suspend fun deleteMedicine(
+    medsBaseUrl: String,
+    medId: String
+): Boolean = withContext(Dispatchers.IO) {
+    try {
+        val url = URL("$medsBaseUrl/deleteMed")
+        val conn = (url.openConnection() as HttpURLConnection).apply {
+            requestMethod = "DELETE"
+            connectTimeout = 10_000
+            readTimeout = 10_000
+            doOutput = true
+            setRequestProperty("Content-Type", "application/json; charset=UTF-8")
+        }
+
+        val body = JSONObject().put("_id", medId).toString()
+        conn.outputStream.use { os ->
+            os.write(body.toByteArray(Charsets.UTF_8))
+        }
+
+        val code = conn.responseCode
+        conn.disconnect()
+        code in 200..299
+    } catch (e: Exception) {
+        e.printStackTrace()
+        false
+    }
+}
+
 
 
 suspend fun obtenerAdultosVinculados(
