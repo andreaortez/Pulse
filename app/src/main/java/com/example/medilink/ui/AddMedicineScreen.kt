@@ -65,7 +65,8 @@ fun AddMedicineScreen(
     onDoneClick: () -> Unit = {},
     idUsuario: String,
     type: String,
-    existingMedicine: MedicineUi? = null
+    existingMedicine: MedicineUi? = null,
+    oldMedId: String? = null
 ) {
     val medsUrl = BuildConfig.MEDS_URL
     val usersUrl = BuildConfig.USERS_URL
@@ -165,7 +166,20 @@ fun AddMedicineScreen(
                             ).show()
                             return@launch
                         }
+                        if (oldMedId != null) {
+                            val deleted = deleteMedicineById(
+                                baseUrl = "$medsUrl/deleteMed",
+                                medId = oldMedId
+                            )
+                            if (!deleted) {
+                                Toast.makeText(
+                                    context,
+                                    "No se pudo eliminar la versión anterior",
+                                    Toast.LENGTH_SHORT
+                                ).show()
 
+                            }
+                        }
                         val id =
                             if(type=="FAMILIAR"){
                                 adultoSeleccionado!!.id
@@ -504,11 +518,10 @@ fun AddMedicineScreen(
 fun AddMedicineScreenPreview() {
     MaterialTheme {
         AddMedicineScreen(
-            onBackClick = {},
-            onDoneClick = {},
             idUsuario = "previewUser",
             type = "FAMILIAR",
-            existingMedicine = null
+            existingMedicine = null,
+            oldMedId = null
         )
     }
 }
@@ -617,6 +630,34 @@ suspend fun createMedicine(
         }
     }
 }
+suspend fun deleteMedicineById(
+    baseUrl: String,
+    medId: String
+): Boolean = withContext(Dispatchers.IO) {
+    try {
+        val url = URL(baseUrl)
+        val conn = (url.openConnection() as HttpURLConnection).apply {
+            requestMethod = "DELETE"
+            connectTimeout = 10_000
+            readTimeout = 10_000
+            doOutput = true
+            setRequestProperty("Content-Type", "application/json; charset=UTF-8")
+        }
+
+        val body = JSONObject().put("_id", medId).toString()
+        conn.outputStream.use { os ->
+            os.write(body.toByteArray(Charsets.UTF_8))
+        }
+
+        val code = conn.responseCode
+        conn.disconnect()
+        code in 200..299
+    } catch (e: Exception) {
+        e.printStackTrace()
+        false
+    }
+}
+
 
 suspend fun buscarAdultos(
     baseUrl: String,

@@ -89,7 +89,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
 
-    <!-- Selector de adulto (solo se usa si el usuario es FAMILIAR) -->
+
     <androidx.cardview.widget.CardView
         android:id="@+id/spinnerAdultosCard"
         android:layout_width="0dp"
@@ -135,7 +135,6 @@
     </androidx.cardview.widget.CardView>
 
 
-    <!-- LISTA DE MEDICAMENTOS ENTRE CALENDARIO Y NAV -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvMedicines"
         android:layout_width="0dp"
@@ -150,7 +149,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         tools:listitem="@layout/item_medicine" />
 
-    <!-- BOTTOM NAV PEGADO ABAJO -->
     <include
         android:id="@+id/bottomNav"
         layout="@layout/bottom_nav"
