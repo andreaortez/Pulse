@@ -5,6 +5,7 @@ import kotlinx.parcelize.Parcelize
 
 @Parcelize
 data class MedicineUi(
+    val id: String,
     val name: String,
     val timeText: String,
     val quantity: Int,

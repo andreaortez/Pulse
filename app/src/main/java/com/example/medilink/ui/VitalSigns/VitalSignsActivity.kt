@@ -15,12 +15,12 @@ class VitalSignsActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         val id = SessionManager.getUserId(this)
-
+        print("entered")
         if (id == null) {
             finish()
             return
         }
-
+        print("entered")
         setContent {
             MaterialTheme {
                 VitalSignsScreen(
@@ -35,10 +35,10 @@ class VitalSignsActivity : ComponentActivity() {
                             putExtra(ChatBotActivity.PRESSURE, pressure)
                             putExtra(ChatBotActivity.TEMPERATURE, temperature)
                         }
-
                         // 2. enviar datos
                         startActivity(intent)
-                    }
+                    },
+                    idUsuario = id
                 )
             }
         }
