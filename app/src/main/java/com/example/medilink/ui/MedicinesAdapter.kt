@@ -7,7 +7,6 @@ import android.widget.CheckBox
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
-
 import androidx.recyclerview.widget.RecyclerView
 import com.example.medilink.R
 
@@ -18,13 +17,12 @@ class MedicinesAdapter(
 ) : RecyclerView.Adapter<MedicinesAdapter.MedicineViewHolder>() {
 
     inner class MedicineViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val tvName: TextView = view.findViewById(R.id.tvTitle)
+        val tvTitle: TextView = view.findViewById(R.id.tvTitle)
         val tvTime: TextView = view.findViewById(R.id.tvTime)
+        val tvQuantity: TextView = view.findViewById(R.id.tvQuantity)
         val cbTaken: CheckBox = view.findViewById(R.id.checkTaken)
         val ivIcon: ImageView = view.findViewById(R.id.ivIcon)
-
         val btnEdit: ImageButton = view.findViewById(R.id.btnEdit)
-        val tvTitle: TextView = view.findViewById(R.id.tvTitle)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MedicineViewHolder {
@@ -36,18 +34,21 @@ class MedicinesAdapter(
     override fun onBindViewHolder(holder: MedicineViewHolder, position: Int) {
         val item = items[position]
 
-        holder.tvName.text = item.name
+        holder.ivIcon.setImageResource(item.iconRes)
+        holder.tvTitle.text = item.name
         holder.tvTime.text = item.timeText
 
+        // Cantidad formateada a texto (ej: "Cantidad: 2")
+        holder.tvQuantity.text = "Cantidad: ${item.quantity}"
+
+        // Evitar que el listener se dispare al setear isChecked
         holder.cbTaken.setOnCheckedChangeListener(null)
         holder.cbTaken.isChecked = item.taken
 
         holder.cbTaken.setOnCheckedChangeListener { _, isChecked ->
-
-            item.taken= isChecked
+            item.taken = isChecked
             onCheckedChange(item, isChecked)
         }
-        holder.tvTitle.text = item.name
 
         holder.btnEdit.setOnClickListener {
             onEditClick(item)

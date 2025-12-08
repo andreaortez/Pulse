@@ -25,12 +25,11 @@ import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
 import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.TimeZone
 import com.example.medilink.ui.ChatBotActivity
 import com.example.medilink.ui.MedicineUi
 import com.example.medilink.ui.MedicinesAdapter
 import com.example.medilink.ui.VitalSigns.VitalSignsActivity
+import org.json.JSONArray
 
 data class Alert(
     val id: String,
@@ -48,7 +47,10 @@ data class AdultoVinculado(
 data class HomeReminder(
     val medId: String,
     val nombre: String,
-    val proximoRecordatorioTexto: String
+    val proximoRecordatorioTexto: String,
+    val usuarioId: String,
+    val forma: String,
+    val cantidad: Int
 )
 
 class HomeActivity : AppCompatActivity() {
@@ -60,7 +62,7 @@ class HomeActivity : AppCompatActivity() {
 
     private var selectedAdultId: String? = null
     private var userType: String = ""
-    private var currentUserId: String = ""
+    private var userId: String = ""
 
     @SuppressLint("SetTextI18n")
     @RequiresApi(Build.VERSION_CODES.O)
@@ -72,7 +74,7 @@ class HomeActivity : AppCompatActivity() {
         usersBaseUrl = BuildConfig.USERS_URL
 
         userType = SessionManager.getUserType(this) ?: ""
-        currentUserId = SessionManager.getUserId(this) ?: ""
+        userId = SessionManager.getUserId(this) ?: ""
 
         //tabs
         val navUser = findViewById<ImageView>(R.id.navUser)
@@ -134,19 +136,36 @@ class HomeActivity : AppCompatActivity() {
                 selectedDateIso = selectedDate.format(DateTimeFormatter.ISO_LOCAL_DATE)
 
                 lifecycleScope.launch {
-                    val userId = if (userType.contains("FAMILIAR", ignoreCase = true)) {
-                        selectedAdultId ?: currentUserId
+                    val endpoint = if (userType.contains("FAMILIAR", ignoreCase = true)) {
+                        "$medsBaseUrl/by-date-familiar"
                     } else {
-                        currentUserId
+                        "$medsBaseUrl/by-date"
                     }
 
-                    val reminders = obtenerRecordatoriosHome(medsBaseUrl, userId, selectedDateIso)
+                    val reminders = obtenerRecordatoriosHome(endpoint, userId, selectedDateIso)
 
-                    val medicines = reminders.map { reminder ->
+                    val remindersFiltrados = if (userType.contains("FAMILIAR", ignoreCase = true)
+                        && selectedAdultId != null
+                    ) {
+                        reminders.filter { it.usuarioId == selectedAdultId }
+                    } else {
+                        reminders
+                    }
+
+                    val medicines = remindersFiltrados.map { reminder ->
+
+                        val iconRes = when (reminder.forma.lowercase(Locale.ROOT)) {
+                            "Cápsula" -> R.drawable.ic_capsule
+                            "Tableta" -> R.drawable.ic_tablet
+                            "Solución" -> R.drawable.ic_solution
+                            else -> R.drawable.ic_gutte
+                        }
+
                         MedicineUi(
                             name = reminder.nombre,
                             timeText = reminder.proximoRecordatorioTexto,
-                            extraText = ""
+                            quantity = reminder.cantidad,
+                            iconRes = iconRes
                         )
                     }
 
@@ -177,9 +196,9 @@ class HomeActivity : AppCompatActivity() {
             rvDays.scrollToPosition(centerIndex)
         }
 
-        if (userType.contains("FAMILIAR", ignoreCase = true) && currentUserId.isNotBlank()) {
+        if (userType.contains("FAMILIAR", ignoreCase = true) && userId.isNotBlank()) {
             lifecycleScope.launch {
-                val adultos = obtenerAdultosVinculados(usersBaseUrl, currentUserId)
+                val adultos = obtenerAdultosVinculados(usersBaseUrl, userId)
 
                 if (adultos.isNotEmpty()) {
                     // llenar spinner
@@ -221,21 +240,38 @@ class HomeActivity : AppCompatActivity() {
             }
         }
 
-        if (currentUserId.isNotBlank()) {
+        if (userId.isNotBlank()) {
             lifecycleScope.launch {
-                val userId = if (userType.contains("FAMILIAR", ignoreCase = true)) {
-                    selectedAdultId ?: currentUserId
+                val endpoint = if (userType.contains("FAMILIAR", ignoreCase = true)) {
+                    "$medsBaseUrl/by-date-familiar"
                 } else {
-                    currentUserId
+                    "$medsBaseUrl/by-date"
                 }
 
-                val reminders = obtenerRecordatoriosHome(medsBaseUrl, userId, selectedDateIso)
+                val reminders = obtenerRecordatoriosHome(endpoint, userId, selectedDateIso)
 
-                val medicines = reminders.map { reminder ->
+                // Si es FAMILIAR y hay adulto seleccionado, filtramos
+                val remindersFiltrados = if (userType.contains("FAMILIAR", ignoreCase = true)
+                    && selectedAdultId != null
+                ) {
+                    reminders.filter { it.usuarioId == selectedAdultId }
+                } else {
+                    reminders
+                }
+
+                val medicines = remindersFiltrados.map { reminder ->
+                    val iconRes = when (reminder.forma.lowercase(Locale.ROOT)) {
+                        "Cápsula" -> R.drawable.ic_capsule
+                        "Tableta" -> R.drawable.ic_tablet
+                        "Solución" -> R.drawable.ic_solution
+                        else -> R.drawable.ic_gutte
+                    }
+
                     MedicineUi(
                         name = reminder.nombre,
                         timeText = reminder.proximoRecordatorioTexto,
-                        extraText = ""
+                        quantity = reminder.cantidad,
+                        iconRes = iconRes
                     )
                 }
 
@@ -269,22 +305,38 @@ class HomeActivity : AppCompatActivity() {
     }
 
     private fun loadMedicines() {
-        if (currentUserId.isBlank()) return
+        if (userId.isBlank()) return
 
-        val userId = if (userType.contains("FAMILIAR", ignoreCase = true)) {
-            selectedAdultId ?: currentUserId
+        val endpoint = if (userType.contains("FAMILIAR", ignoreCase = true)) {
+            "$medsBaseUrl/by-date-familiar"
         } else {
-            currentUserId
+            "$medsBaseUrl/by-date"
         }
 
         lifecycleScope.launch {
-            val reminders = obtenerRecordatoriosHome(medsBaseUrl, userId, selectedDateIso)
+            val reminders = obtenerRecordatoriosHome(endpoint, userId, selectedDateIso)
 
-            val medicines = reminders.map { reminder ->
+            val remindersFiltrados = if (userType.contains("FAMILIAR", ignoreCase = true)
+                && selectedAdultId != null
+            ) {
+                reminders.filter { it.usuarioId == selectedAdultId }
+            } else {
+                reminders
+            }
+
+            val medicines = remindersFiltrados.map { reminder ->
+                val iconRes = when (reminder.forma.lowercase(Locale.ROOT)) {
+                    "Cápsula" -> R.drawable.ic_capsule
+                    "Tableta" -> R.drawable.ic_tablet
+                    "Solución" -> R.drawable.ic_solution
+                    else -> R.drawable.ic_gutte
+                }
+
                 MedicineUi(
                     name = reminder.nombre,
                     timeText = reminder.proximoRecordatorioTexto,
-                    extraText = ""
+                    quantity = reminder.cantidad,
+                    iconRes = iconRes
                 )
             }
 
@@ -326,18 +378,16 @@ class HomeActivity : AppCompatActivity() {
     }
 }
 
-
-
-
 suspend fun obtenerRecordatoriosHome(
-    medsBaseUrl: String,
+    endpointUrl: String,
     userId: String,
     selectedDate: String
 ): List<HomeReminder> = withContext(Dispatchers.IO) {
     val resultado = mutableListOf<HomeReminder>()
 
     try {
-        val urlMeds = URL("$medsBaseUrl/by-date-familiar/$userId?date=$selectedDate")
+        val urlMeds = URL("$endpointUrl/$userId?date=$selectedDate")
+
         val connMeds = (urlMeds.openConnection() as HttpURLConnection).apply {
             requestMethod = "GET"
             connectTimeout = 10_000
@@ -349,22 +399,24 @@ suspend fun obtenerRecordatoriosHome(
 
         if (codeMeds !in 200..299) {
             val err = connMeds.errorStream?.bufferedReader()?.use { it.readText() }
-            Log.e("HomeDebug", "Error listando medicamentos activos: $err")
+            Log.e("HomeDebug", "Error listando medicamentos: $err")
             connMeds.disconnect()
             return@withContext emptyList()
         }
 
         val medsText = connMeds.inputStream.bufferedReader().use { it.readText() }
         connMeds.disconnect()
-        Log.d("HomeDebug", "Respuesta meds: $medsText")
 
-        val obj = JSONObject(medsText)
-        val medsArray = obj.getJSONArray("medicamentos")
+        val trimmed = medsText.trim()
+        val medsArray = JSONArray(trimmed)
 
         for (i in 0 until medsArray.length()) {
             val med = medsArray.getJSONObject(i)
             val medId = med.optString("_id", "")
             val nombre = med.optString("nombre", "Medicamento")
+            val usuarioId = med.optString("id_usuario", userId)
+            val forma = med.optString("forma", "")
+            val cantidad = med.optInt("cantidad", 0)
 
             if (medId.isBlank()) continue
 
@@ -394,17 +446,21 @@ suspend fun obtenerRecordatoriosHome(
                 HomeReminder(
                     medId = medId,
                     nombre = nombre,
-                    proximoRecordatorioTexto = textoHora
+                    proximoRecordatorioTexto = textoHora,
+                    usuarioId = usuarioId,
+                    forma = forma,
+                    cantidad = cantidad
                 )
             )
         }
     } catch (e: Exception) {
         e.printStackTrace()
+        Log.e("HomeDebug", "Excepción en obtenerRecordatoriosHome: ${e.message}")
     }
 
-    Log.d("HomeDebug", "Reminders construidos: ${resultado.size}")
     resultado
 }
+
 
 suspend fun obtenerAdultosVinculados(
     usersBaseUrl: String,
@@ -450,5 +506,3 @@ suspend fun obtenerAdultosVinculados(
         emptyList()
     }
 }
-
-//Alertas

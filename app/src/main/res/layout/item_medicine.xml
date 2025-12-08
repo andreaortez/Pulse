@@ -8,6 +8,7 @@
     android:layout_marginBottom="6dp"
     android:foreground="?attr/selectableItemBackground"
     app:cardCornerRadius="14dp"
+    app:cardUseCompatPadding="true"
     app:cardElevation="4dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -19,12 +20,27 @@
         <ImageView
             android:id="@+id/ivIcon"
             android:layout_width="36dp"
-            android:layout_height="40dp"
+            android:layout_height="0dp"
             android:src="@drawable/ic_pill"
+            android:contentDescription="Ícono de medicamento"
             app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
 
-        <!-- Título -->
+        <!-- Botón EDITAR (alineado con el nombre) -->
+        <ImageButton
+            android:id="@+id/btnEdit"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:src="@drawable/ic_edit"
+            android:background="@android:color/transparent"
+            android:contentDescription="Editar medicamento"
+            app:tint="#012248"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/tvTitle"
+            app:layout_constraintBottom_toBottomOf="@id/tvTitle" />
+
+        <!-- Título / nombre del medicamento -->
         <TextView
             android:id="@+id/tvTitle"
             android:layout_width="0dp"
@@ -33,45 +49,50 @@
             android:textColor="#012248"
             android:textStyle="bold"
             android:textSize="16sp"
+            android:maxLines="1"
+            android:ellipsize="end"
             app:layout_constraintStart_toEndOf="@id/ivIcon"
             app:layout_constraintTop_toTopOf="@id/ivIcon"
             app:layout_constraintEnd_toStartOf="@id/btnEdit"
-            android:layout_marginStart="12dp"/>
-
-        <!-- Botón EDITAR (arriba a la derecha) -->
-        <ImageButton
-            android:id="@+id/btnEdit"
-            android:layout_width="28dp"
-            android:layout_height="28dp"
-            android:src="@drawable/ic_edit"
-            android:background="@android:color/transparent"
-            android:contentDescription="Editar"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:tint="#012248" />
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="8dp"/>
 
         <!-- Hora -->
-
-        <!-- Checkbox -->
         <TextView
             android:id="@+id/tvTime"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="8dp"
             android:text="Hoy a las 6:00 a. m."
             android:textColor="#444444"
             android:textSize="14sp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="@id/tvTitle"
-            app:layout_constraintTop_toBottomOf="@id/tvTitle" />
+            app:layout_constraintEnd_toStartOf="@id/checkTaken"
+            app:layout_constraintTop_toBottomOf="@id/tvTitle"
+            android:layout_marginEnd="8dp"/>
 
+        <!-- Cantidad + forma -->
+        <TextView
+            android:id="@+id/tvQuantity"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Cantidad: 2 · Cápsula"
+            android:textColor="#777777"
+            android:textSize="12sp"
+            app:layout_constraintStart_toStartOf="@id/tvTime"
+            app:layout_constraintEnd_toStartOf="@id/checkTaken"
+            app:layout_constraintTop_toBottomOf="@id/tvTime"
+            android:layout_marginEnd="8dp"/>
+
+        <!-- Checkbox: tomado / no tomado -->
         <CheckBox
             android:id="@+id/checkTaken"
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:buttonTint="#0d6efd"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/btnEdit"
             app:layout_constraintBottom_toBottomOf="parent"/>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
