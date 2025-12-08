@@ -7,6 +7,7 @@ import kotlinx.parcelize.Parcelize
 data class MedicineUi(
     val name: String,
     val timeText: String,
-    val extraText: String,
-    var taken: Boolean = false
+    val quantity: Int,
+    var taken: Boolean = false,
+    val iconRes: Int
 ) : Parcelable
