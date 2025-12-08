@@ -447,6 +447,7 @@ suspend fun obtenerRecordatoriosHome(
     userId: String,
     selectedDate: String
 ): List<HomeReminder> = withContext(Dispatchers.IO) {
+
     val resultado = mutableListOf<HomeReminder>()
 
     try {
@@ -471,18 +472,40 @@ suspend fun obtenerRecordatoriosHome(
         val medsText = connMeds.inputStream.bufferedReader().use { it.readText() }
         connMeds.disconnect()
 
-        val trimmed = medsText.trim()
-        val medsArray = JSONArray(trimmed)
+        val medsArray = JSONArray(medsText.trim())
+
+        val selectedLocalDate = java.time.LocalDate.parse(selectedDate)
 
         for (i in 0 until medsArray.length()) {
             val med = medsArray.getJSONObject(i)
-            val medId = med.optString("_id", "")
-            val nombre = med.optString("nombre", "Medicamento")
-            val usuarioId = med.optString("id_usuario", userId)
-            val forma = med.optString("forma", "")
-            val cantidad = med.optInt("cantidad", 0)
+
+            val medId       = med.optString("_id", "")
+            val nombre      = med.optString("nombre", "Medicamento")
+            val usuarioId   = med.optString("id_usuario", userId)
+            val forma       = med.optString("forma", "")
+            val cantidad    = med.optInt("cantidad", 0)
 
             if (medId.isBlank()) continue
+
+            val fechaInicioStr = med.optString("fecha_inicio", "")
+            val fechaFinStr    = med.optString("fecha_fin", "")
+
+
+            val isWithinRange = try {
+                val fechaInicio = java.time.LocalDate.parse(fechaInicioStr)
+                val fechaFin    = java.time.LocalDate.parse(fechaFinStr)
+
+
+                !selectedLocalDate.isBefore(fechaInicio) &&
+                        !selectedLocalDate.isAfter(fechaFin)
+            } catch (e: Exception) {
+
+                true
+            }
+
+
+            if (!isWithinRange) continue
+
 
             val horasArray = med.optJSONArray("horas_recordatorio")
             val horaRaw = if (horasArray != null && horasArray.length() > 0) {
@@ -497,13 +520,15 @@ suspend fun obtenerRecordatoriosHome(
                     val date = parser.parse(horaRaw)
                     val fmt = SimpleDateFormat("h:mm a", Locale("es", "ES"))
                     val horaBonita = fmt.format(date!!).lowercase()
-                    "Hoy a las $horaBonita"
+
+
+                    "A las $horaBonita"
                 } catch (e: Exception) {
                     e.printStackTrace()
-                    "Hoy"
+                    "Sin hora específica"
                 }
             } else {
-                "Hoy"
+                "Sin hora específica"
             }
 
             resultado.add(
@@ -552,6 +577,7 @@ suspend fun deleteMedicine(
         false
     }
 }
+
 
 
 

@@ -9,7 +9,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.medilink.R
-import 
+
 
 class MedicinesAdapter(
     private val items: List<MedicineUi>,
@@ -22,7 +22,7 @@ class MedicinesAdapter(
         val tvTitle: TextView = view.findViewById(R.id.tvTitle)
         val tvTime: TextView = view.findViewById(R.id.tvTime)
         val tvQuantity: TextView = view.findViewById(R.id.tvQuantity)
-        val cbTaken: CheckBox = view.findViewById(R.id.checkTaken)
+
         val ivIcon: ImageView = view.findViewById(R.id.ivIcon)
         val btnEdit: ImageButton = view.findViewById(R.id.btnEdit)
         val btnDelete: ImageButton = itemView.findViewById(R.id.btnDeleteMed)
@@ -41,17 +41,11 @@ class MedicinesAdapter(
         holder.tvTitle.text = item.name
         holder.tvTime.text = item.timeText
 
-        // Cantidad formateada a texto (ej: "Cantidad: 2")
+
         holder.tvQuantity.text = "Cantidad: ${item.quantity}"
 
-        // Evitar que el listener se dispare al setear isChecked
-        holder.cbTaken.setOnCheckedChangeListener(null)
-        holder.cbTaken.isChecked = item.taken
 
-        holder.cbTaken.setOnCheckedChangeListener { _, isChecked ->
-            item.taken = isChecked
-            onCheckedChange(item, isChecked)
-        }
+
 
         holder.btnEdit.setOnClickListener {
             onEditClick(item)
@@ -59,6 +53,7 @@ class MedicinesAdapter(
         holder.btnDelete.setOnClickListener {
             onDeleteClick(item)
         }
+        holder.ivIcon.setImageResource(R.drawable.ic_pill)
     }
 
     override fun getItemCount(): Int = items.size
