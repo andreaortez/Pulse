@@ -166,6 +166,16 @@ fun AddMedicineScreen(
                             ).show()
                             return@launch
                         }
+
+                        if (type == "FAMILIAR" && adultoSeleccionado == null) {
+                            Toast.makeText(
+                                context,
+                                "Selecciona un adulto mayor",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            return@launch
+                        }
+
                         if (oldMedId != null) {
                             val deleted = deleteMedicineById(
                                 baseUrl = "$medsUrl/deleteMed",
@@ -180,8 +190,7 @@ fun AddMedicineScreen(
 
                             }
                         }
-                        val id =
-                            if(type=="FAMILIAR"){
+                        val id = if(type=="FAMILIAR"){
                                 adultoSeleccionado!!.id
                             }else{
                                 idUsuario
