@@ -46,6 +46,9 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 import android.os.Build
 import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.health.connect.client.PermissionController
+import androidx.health.connect.client.permission.HealthPermission
 import com.example.medilink.BuildConfig
 import com.example.medilink.SessionManager
 import org.json.JSONObject
@@ -68,34 +71,70 @@ fun VitalSignsScreen(
     var temperature by remember { mutableStateOf("36.5") }
 
     val context = LocalContext.current
-    LaunchedEffect(Unit){
-        withContext(Dispatchers.IO) {
-            Log.d("VitalSigns", "LLEGUE 0")
-            try {
+
+        val permissions = remember {
+            setOf(
+                HealthPermission.getReadPermission(HeartRateRecord::class),
+                HealthPermission.getReadPermission(BloodPressureRecord::class),
+                HealthPermission.getReadPermission(BodyTemperatureRecord::class),
+            )
+        }
+
+        var hasPermissions by remember { mutableStateOf(false) }
+
+        val permissionsLauncher = rememberLauncherForActivityResult(
+            PermissionController.createRequestPermissionResultContract()
+        ) { granted: Set<String> ->
+            hasPermissions = granted.containsAll(permissions)
+        }
+
+        LaunchedEffect(hasPermissions) {
+            try{
                 val sdkStatus = HealthConnectClient.sdkStatus(context)
+                Log.d("VitalSigns", "codigo : $sdkStatus")
+                val client = HealthConnectClient.getOrCreate(context)
 
-                Log.d("VitalSigns", "LLEGUE 1")
-                if (sdkStatus == HealthConnectClient.SDK_AVAILABLE && !(Build.VERSION.SDK_INT < Build.VERSION_CODES.O)) {
-                    Log.d("VitalSigns", "LLEGUE 2")
-                    if (!(Build.VERSION.SDK_INT < Build.VERSION_CODES.O)) {
-                        Log.d("VitalSigns", "LLEGUE 3")
-                        val client = HealthConnectClient.getOrCreate(context);
+                // 1) Revisar permisos en IO
+                val granted = withContext(Dispatchers.IO) {
+                    client.permissionController.getGrantedPermissions()
+                }
 
-                        //consiguiendo timeframes
-                        val now = Instant.now();
+                if (!granted.containsAll(permissions)) {
 
+                    if (!hasPermissions) {
+                        permissionsLauncher.launch(permissions)
+                    }
+
+                    return@LaunchedEffect
+                }
+            }catch(e : Exception){
+
+            }
+
+            // A partir de aquí ya sabemos que SÍ hay permisos concedidos
+            withContext(Dispatchers.IO) {
+                try {
+                    val sdkStatus = HealthConnectClient.sdkStatus(context)
+
+                    if (sdkStatus == HealthConnectClient.SDK_AVAILABLE &&
+                        Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && hasPermissions
+                    ) {
+                        val client = HealthConnectClient.getOrCreate(context)
+
+                        // ---- Health Connect ----
+                        val now = Instant.now()
                         val time = TimeRangeFilter.after(
                             now.minus(1, ChronoUnit.MINUTES)
                         )
-                        Log.d("VitalSigns", "LLEGUE 4")
+
+
                         try {
                             val bpm_report = client.readRecords(
                                 ReadRecordsRequest(
                                     recordType = HeartRateRecord::class,
                                     timeRangeFilter = time
                                 )
-                            );
-
+                            )
                             val latestBPM = bpm_report.records.maxByOrNull { it.startTime }
                             val latestBpmSample = latestBPM?.samples?.maxByOrNull { it.time }
 
@@ -108,42 +147,96 @@ fun VitalSignsScreen(
                                     recordType = BloodPressureRecord::class,
                                     timeRangeFilter = time
                                 )
-                            );
+                            )
                             val latestBP = pressure_report.records.maxByOrNull { it.time }
-                            var num = latestBP?.systolic?.inMillimetersOfMercury?.toInt();
-                            var den = latestBP?.diastolic?.inMillimetersOfMercury?.toInt();
+                            val num = latestBP?.systolic?.inMillimetersOfMercury?.toInt()
+                            val den = latestBP?.diastolic?.inMillimetersOfMercury?.toInt()
                             if (num != null && den != null) {
-                                pressure = Integer.toString(num) + "/" + Integer.toString(den);
+                                pressure = "$num/$den"
                             }
+
                             val temperature_report = client.readRecords(
                                 ReadRecordsRequest(
                                     recordType = BodyTemperatureRecord::class,
                                     timeRangeFilter = time
                                 )
-                            );
-                            val latestTemp =
-                                temperature_report.records.maxByOrNull { it.time }?.temperature?.inCelsius
-
+                            )
+                            val latestTemp = temperature_report.records
+                                .maxByOrNull { it.time }
+                                ?.temperature
+                                ?.inCelsius
 
                             latestTemp?.let { temp ->
                                 temperature = String.format("%.1f", temp)
                             }
 
-                            //escribir dentro de la tabla de registros
-
-
                         } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
 
+                    } else {
+
+                        // ---- Fallback: /simulate ----
+                        val url = URL(BuildConfig.VITALS_URL + "/simulate")
+
+                        val bodyJson = JSONObject()
+
+                        val conn = (url.openConnection() as HttpURLConnection).apply {
+                            requestMethod = "POST"
+                            connectTimeout = 10_000
+                            readTimeout = 10_000
+                            doOutput = true
+                            setRequestProperty("Content-Type", "application/json; charset=utf-8")
+                        }
+
+                        conn.outputStream.use { os ->
+                            val input = bodyJson.toString().toByteArray(Charsets.UTF_8)
+                            os.write(input, 0, input.size)
+                        }
+
+                        val responseCode = conn.responseCode
+                        val responseText = if (responseCode in 200..299) {
+                            conn.inputStream.bufferedReader().use { it.readText() }
+                        } else {
+                            conn.errorStream?.bufferedReader()?.use { it.readText() }
+                                ?: "Error HTTP $responseCode"
+                        }
+                        conn.disconnect()
+
+
+                        try {
+                            val json = JSONObject(responseText)
+
+                            val bpmValue = json.optInt("bpm", -1)
+                            if (bpmValue != -1) {
+                                bpm = bpmValue.toString()
+                            }
+
+                            val presionValue = json.optString("presion", "")
+                            if (presionValue.isNotBlank()) {
+                                pressure = presionValue
+                            }
+
+                            val tempValue = json.optDouble("temperatura", Double.NaN)
+                            if (!tempValue.isNaN()) {
+                                temperature = String.format("%.1f", tempValue)
+                            }
+
+                            Log.d("VitalSigns", "LLEGUE 9")
+                        } catch (e: Exception) {
+                            e.printStackTrace()
                         }
                     }
 
-                } else {
-                    Log.d("VitalSigns", "LLEGUE 5")
-                    //generar los datos aleatorios para la simulación
-                    val url = URL(BuildConfig.VITALS_URL + "/simulate")
-                    Log.d("VitalSigns", "LLEGUE 6")
-                    val bodyJson = JSONObject().apply {}
+                    // ---- POST a tu backend ----
+                    val bodyJson = JSONObject().apply {
+                        put("adultoMayorId", idUsuario)
+                        put("bpm", bpm)
+                        put("temperatura", temperature)
+                        put("presion", pressure)
+                    }
 
+                    val url = URL(BuildConfig.VITALS_URL + "/")
                     val conn = (url.openConnection() as HttpURLConnection).apply {
                         requestMethod = "POST"
                         connectTimeout = 10_000
@@ -151,7 +244,7 @@ fun VitalSignsScreen(
                         doOutput = true
                         setRequestProperty("Content-Type", "application/json; charset=utf-8")
                     }
-                    Log.d("VitalSigns", "LLEGUE 7")
+
                     conn.outputStream.use { os ->
                         val input = bodyJson.toString().toByteArray(Charsets.UTF_8)
                         os.write(input, 0, input.size)
@@ -165,69 +258,14 @@ fun VitalSignsScreen(
                             ?: "Error HTTP $responseCode"
                     }
                     conn.disconnect()
-                    Log.d("VitalSigns", "LLEGUE 3")
-                    try {
-                        val json = JSONObject(responseText)
 
-                        val bpmValue = json.optInt("bpm", -1)
-                        if (bpmValue != -1) {
-                            bpm = bpmValue.toString()
-                        }
-
-                        val presionValue = json.optString("presion", "")
-                        if (presionValue.isNotBlank()) {
-                            pressure = presionValue
-                        }
-
-                        val tempValue = json.optDouble("temperatura", Double.NaN)
-                        if (!tempValue.isNaN()) {
-                            temperature = String.format("%.1f", tempValue)
-                        }
-
-                        Log.d("VitalSigns", "LLEGUE 4")
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-
-                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
                 }
-
-                //escribir los datos como nuevo registros
-
-                val bodyJson = JSONObject().apply {
-                    put("adultoMayorId", idUsuario)
-                    put("bpm", bpm)
-                    put("temperatura", temperature)
-                    put("presion", pressure)
-                }
-
-                val url = URL(BuildConfig.VITALS_URL + "/")
-                val conn = (url.openConnection() as HttpURLConnection).apply {
-                    requestMethod = "POST"
-                    connectTimeout = 10_000
-                    readTimeout = 10_000
-                    doOutput = true
-                    setRequestProperty("Content-Type", "application/json; charset=utf-8")
-                }
-
-                conn.outputStream.use { os ->
-                    val input = bodyJson.toString().toByteArray(Charsets.UTF_8)
-                    os.write(input, 0, input.size)
-                }
-
-                val responseCode = conn.responseCode
-                val responseText = if (responseCode in 200..299) {
-                    conn.inputStream.bufferedReader().use { it.readText() }
-                } else {
-                    conn.errorStream?.bufferedReader()?.use { it.readText() }
-                        ?: "Error HTTP $responseCode"
-                }
-                conn.disconnect()
-            } catch (e: Exception) {
-                e.printStackTrace();
             }
         }
-    }
-    val gradient = Brush.verticalGradient(
+
+        val gradient = Brush.verticalGradient(
         colors = listOf(
             Color(0xFF2196F3),
             Color(0xFF1565C0)

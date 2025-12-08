@@ -9,6 +9,7 @@ import android.widget.EditText
 import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.example.medilink.BuildConfig
 import com.example.medilink.ChooseUser
 import com.example.medilink.MainActivity
 import com.example.medilink.R
@@ -116,7 +117,7 @@ class Registro : AppCompatActivity() {
     ) {
         Thread {
             try {
-                val url = URL("http://10.0.2.2:3000/users/createUser")
+                val url = URL(BuildConfig.USERS_URL+"/createUser")
                 val connection = (url.openConnection() as HttpURLConnection).apply {
                     requestMethod = "POST"
                     connectTimeout = 5000

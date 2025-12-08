@@ -1,5 +1,6 @@
 package com.example.medilink.data
 
+import com.example.medilink.BuildConfig
 import com.example.medilink.data.model.LoggedInUser
 import org.json.JSONObject
 import java.io.IOException
@@ -14,7 +15,7 @@ class LoginDataSource {
 
     fun login(username: String, password: String): Result<LoggedInUser> {
         try {
-            val url = URL("$baseUrl/users/login")
+            val url = URL(BuildConfig.USERS_URL+"/login")
             val connection = (url.openConnection() as HttpURLConnection).apply {
                 requestMethod = "POST"
                 connectTimeout = 5000
@@ -83,6 +84,7 @@ class LoginDataSource {
             }
 
         } catch (e: Exception) {
+            e.printStackTrace()
             return Result.Error(IOException("Error al iniciar sesión", e))
         }
     }
