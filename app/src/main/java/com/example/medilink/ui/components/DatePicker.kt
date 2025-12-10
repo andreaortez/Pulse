@@ -39,7 +39,6 @@ import com.example.medilink.ui.theme.AzulOscuro
 import com.example.medilink.ui.theme.CelesteClaro
 import com.example.medilink.ui.theme.CelesteVivido2
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DatePickerRange(
     startDateDisplay: String,

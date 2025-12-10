@@ -11,12 +11,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Create
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.List
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.outlined.KeyboardArrowRight
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -48,7 +45,6 @@ import com.example.medilink.ui.theme.AzulNegro
 
 // Colores
 import com.example.medilink.ui.theme.AzulOscuro
-import com.example.medilink.ui.theme.CelesteVivido
 
 enum class ProfileOptionType {
     EDITPROFILE,
@@ -81,7 +77,6 @@ fun ProfileScreen(
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
-        // Imagen de fondo
         Image(
             painter = painterResource(id = R.drawable.bg3),
             contentDescription = null,
@@ -141,7 +136,6 @@ fun ProfileScreen(
                             .verticalScroll(rememberScrollState()),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        // Avatar centrado
                         Box(
                             modifier = Modifier
                                 .size(140.dp)
@@ -162,7 +156,6 @@ fun ProfileScreen(
 
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        // Nombre centrado debajo del avatar
                         Text(
                             text = userName,
                             fontWeight = FontWeight.Bold,

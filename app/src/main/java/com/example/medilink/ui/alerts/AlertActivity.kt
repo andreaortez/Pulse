@@ -52,7 +52,6 @@ class AlertActivity : ComponentActivity() {
                     }
                 },
                 onDismissRequest = {
-                    Log.d("AlertDebug", "onDismissRequest")
                     finish()
                 }
             )

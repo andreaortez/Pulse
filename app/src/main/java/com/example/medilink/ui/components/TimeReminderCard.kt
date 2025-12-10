@@ -42,7 +42,6 @@ fun TimeReminderCard(
                     .padding(horizontal = 16.dp, vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Columna izquierda: campana
                 Box(
                     modifier = Modifier.weight(1f),
                     contentAlignment = Alignment.CenterStart
@@ -55,7 +54,6 @@ fun TimeReminderCard(
                     )
                 }
 
-                // Columna central: HORA centrada
                 Box(
                     modifier = Modifier.weight(2f),
                     contentAlignment = Alignment.Center
@@ -69,7 +67,6 @@ fun TimeReminderCard(
                     )
                 }
 
-                // Columna derecha: botón +
                 Box(
                     modifier = Modifier.weight(1f),
                     contentAlignment = Alignment.CenterEnd
