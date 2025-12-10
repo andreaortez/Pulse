@@ -86,7 +86,7 @@ fun UserCard(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // "Chip" de tipo de usuario
+                    // Chip de tipo de usuario
                     val esAdultoMayor = usuario.tipo.contains("ADULTO_MAYOR", ignoreCase = true)
 
                     val chipBgColor = if (esAdultoMayor) {
@@ -119,10 +119,9 @@ fun UserCard(
                 }
             }
 
-            // Icono de acción
             Icon(
                 imageVector = Icons.Default.Person,
-                contentDescription = "Ver detalles",
+                contentDescription = "Usuario",
                 modifier = Modifier.size(24.dp),
                 tint = AzulNegro.copy(alpha = 0.5f)
             )
