@@ -166,6 +166,16 @@ fun AddMedicineScreen(
                             ).show()
                             return@launch
                         }
+
+                        if (type == "FAMILIAR" && adultoSeleccionado == null) {
+                            Toast.makeText(
+                                context,
+                                "Selecciona un adulto mayor",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            return@launch
+                        }
+
                         if (oldMedId != null) {
                             val deleted = deleteMedicineById(
                                 baseUrl = "$medsUrl/deleteMed",
@@ -180,8 +190,7 @@ fun AddMedicineScreen(
 
                             }
                         }
-                        val id =
-                            if(type=="FAMILIAR"){
+                        val id = if(type=="FAMILIAR"){
                                 adultoSeleccionado!!.id
                             }else{
                                 idUsuario
@@ -574,7 +583,7 @@ suspend fun createMedicine(
                 val medicamentoJson = json.optJSONObject("medicamento")
                 val medId = medicamentoJson?.optString("_id")
 
-                // 2) Crear recordatorio inicial usando la primera hora
+                // Crear recordatorio inicial usando la primera hora
                 val primeraHora = horas.firstOrNull()
 
                 if (!medId.isNullOrBlank() && !primeraHora.isNullOrBlank()) {
@@ -618,7 +627,6 @@ suspend fun createMedicine(
 
                 true
             } else {
-                // Error en creación de medicamento
                 val errorText = conn.errorStream?.bufferedReader()?.use { it.readText() }
                 conn.disconnect()
                 println("Error creando medicamento: $errorText")
@@ -630,6 +638,7 @@ suspend fun createMedicine(
         }
     }
 }
+
 suspend fun deleteMedicineById(
     baseUrl: String,
     medId: String
@@ -657,7 +666,6 @@ suspend fun deleteMedicineById(
         false
     }
 }
-
 
 suspend fun buscarAdultos(
     baseUrl: String,
@@ -709,6 +717,3 @@ suspend fun buscarAdultos(
         }
     }
 }
-
-
-

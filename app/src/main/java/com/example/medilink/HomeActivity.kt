@@ -389,10 +389,7 @@ class HomeActivity : AppCompatActivity() {
         }
     }
 
-    companion object {
-        private const val ALERT_TIME_OFFSET_HOURS = 6
-    }
-
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun loadMedicines() {
         if (userId.isBlank()) return
 
@@ -488,11 +485,7 @@ class HomeActivity : AppCompatActivity() {
         val alarmManager = getSystemService(ALARM_SERVICE) as android.app.AlarmManager
         val now = System.currentTimeMillis()
 
-        Log.d("HomeDebug", "Programando alertas para ${reminders.size} medicamentos")
-
         for (reminder in reminders) {
-            Log.d("HomeDebug", "Med: ${reminder.nombre} horas=${reminder.horasDelDia}")
-
             for (hora in reminder.horasDelDia) {
                 val parts = hora.split(":")
                 if (parts.size < 2) continue
@@ -506,20 +499,12 @@ class HomeActivity : AppCompatActivity() {
                     set(java.util.Calendar.MILLISECOND, 0)
                     set(java.util.Calendar.HOUR_OF_DAY, hour)
                     set(java.util.Calendar.MINUTE, minute)
-
-                    // 👉 TRUCO: compensar las 6 horas
-                    add(java.util.Calendar.HOUR_OF_DAY, ALERT_TIME_OFFSET_HOURS)
                 }
 
                 val triggerAt = cal.timeInMillis
 
-                Log.d(
-                    "HomeDebug",
-                    " -> ${reminder.nombre} @ $hora (offset=$ALERT_TIME_OFFSET_HOURS) final=${cal.time} millis=$triggerAt, now=$now, diff=${triggerAt - now}ms"
-                )
-
+                //si ya pasó la alarma, se salta
                 if (triggerAt <= now) {
-                    Log.d("HomeDebug", "   (saltada, ya pasó) $hora para ${reminder.nombre}")
                     continue
                 }
 
@@ -543,14 +528,13 @@ class HomeActivity : AppCompatActivity() {
                     triggerAt,
                     pending
                 )
-
-                Log.d("HomeDebug", "   ✔ Alarma programada para $hora (${reminder.nombre}) (con offset)")
             }
         }
     }
 
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 suspend fun obtenerRecordatoriosHome(
     endpointUrl: String,
     userId: String,
@@ -603,11 +587,9 @@ suspend fun obtenerRecordatoriosHome(
             val fechaInicioStr = med.optString("fecha_inicio", "")
             val fechaFinStr    = med.optString("fecha_fin", "")
 
-
             val isWithinRange = try {
                 val fechaInicio = java.time.LocalDate.parse(fechaInicioStr)
                 val fechaFin    = java.time.LocalDate.parse(fechaFinStr)
-
 
                 !selectedLocalDate.isBefore(fechaInicio) &&
                         !selectedLocalDate.isAfter(fechaFin)
@@ -616,9 +598,7 @@ suspend fun obtenerRecordatoriosHome(
                 true
             }
 
-
             if (!isWithinRange) continue
-
 
             val horasArray = med.optJSONArray("horas_recordatorio")
 
@@ -637,7 +617,6 @@ suspend fun obtenerRecordatoriosHome(
                     val date = parser.parse(horaRaw)
                     val fmt = SimpleDateFormat("h:mm a", Locale("es", "ES"))
                     val horaBonita = fmt.format(date!!).lowercase()
-
 
                     "A las $horaBonita"
                 } catch (e: Exception) {
@@ -695,9 +674,6 @@ suspend fun deleteMedicine(
         false
     }
 }
-
-
-
 
 suspend fun obtenerAdultosVinculados(
     usersBaseUrl: String,
