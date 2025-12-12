@@ -43,11 +43,6 @@ class MedicinesAdapter(
 
         holder.tvQuantity.text = "Cantidad: ${item.quantity}"
 
-        holder.cbTaken.setOnCheckedChangeListener(null)
-        holder.cbTaken.isChecked = item.taken
-
-
-
         holder.btnEdit.setOnClickListener {
             onEditClick(item)
         }

@@ -95,7 +95,7 @@ fun VitalSignsScreen(
                     Log.d("VitalSigns", "codigo : $sdkStatus")
                     val client = HealthConnectClient.getOrCreate(context)
 
-                    // 1) Revisar permisos en IO
+
                     val granted = withContext(Dispatchers.IO) {
                         client.permissionController.getGrantedPermissions()
                     }
@@ -114,7 +114,7 @@ fun VitalSignsScreen(
 
             }
 
-            // A partir de aquí ya sabemos que SÍ hay permisos concedidos
+
             withContext(Dispatchers.IO) {
                 try {
                     val sdkStatus = HealthConnectClient.sdkStatus(context)
@@ -124,7 +124,7 @@ fun VitalSignsScreen(
                     ) {
                         val client = HealthConnectClient.getOrCreate(context)
 
-                        // ---- Health Connect ----
+
                         val now = Instant.now()
                         val time = TimeRangeFilter.after(
                             now.minus(1, ChronoUnit.MINUTES)
@@ -178,8 +178,6 @@ fun VitalSignsScreen(
                         }
 
                     } else {
-
-                        // ---- Fallback: /simulate ----
                         val url = URL(BuildConfig.VITALS_URL + "/simulate")
 
                         val bodyJson = JSONObject()
@@ -225,13 +223,13 @@ fun VitalSignsScreen(
                                 temperature = String.format("%.1f", tempValue)
                             }
 
-                            Log.d("VitalSigns", "LLEGUE 9")
+
                         } catch (e: Exception) {
                             e.printStackTrace()
                         }
                     }
 
-                    // ---- POST a tu backend ----
+                   
                     val bodyJson = JSONObject().apply {
                         put("adultoMayorId", idUsuario)
                         put("bpm", bpm)
@@ -362,7 +360,7 @@ fun VitalSignsScreen(
                 .padding(horizontal = 16.dp, vertical = 12.dp)
         ) {
 
-            // Tarjeta estilo dashboard (Resumen)
+
             SummaryCard(
                 bpm = bpm,
                 pressure = pressure,
@@ -379,7 +377,6 @@ fun VitalSignsScreen(
                 modifier = Modifier.padding(bottom = 8.dp)
             )
 
-            // Card BPM
             VitalInputCard(
                 title = "Frecuencia cardíaca",
                 subtitle = "Latidos por minuto",
@@ -397,7 +394,6 @@ fun VitalSignsScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Card presión arterial
             VitalInputCard(
                 title = "Presión arterial",
                 subtitle = "Sistólica / diastólica",

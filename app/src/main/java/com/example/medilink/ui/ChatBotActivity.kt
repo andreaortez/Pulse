@@ -115,7 +115,7 @@ fun ChatBotScreen(onBackClick: () -> Unit,
                     val conn = (url.openConnection() as HttpURLConnection).apply {
                         requestMethod = "POST"
                         connectTimeout = 10_000
-                        readTimeout = 10_000
+                        readTimeout = 30_000
                         doOutput = true
                         setRequestProperty("Content-Type", "application/json; charset=utf-8")
                     }
