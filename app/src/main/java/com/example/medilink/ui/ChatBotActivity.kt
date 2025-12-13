@@ -40,12 +40,14 @@ class ChatBotActivity : ComponentActivity() {
         val bpm = intent.getStringExtra(BPM)
         val pressure = intent.getStringExtra(PRESSURE)
         val temperature = intent.getStringExtra(TEMPERATURE)
+        val initialName = intent.getStringExtra(NAME)
         setContent {
             MaterialTheme {
                 ChatBotScreen(onBackClick = { finish() },
                     initialBpm = bpm,
                     initialPressure = pressure,
-                    initialTemperature = temperature)
+                    initialTemperature = temperature,
+                    name = initialName)
             }
         }
     }
@@ -53,6 +55,7 @@ class ChatBotActivity : ComponentActivity() {
         const val BPM = "BPM"
         const val PRESSURE = "PRESSURE"
         const val TEMPERATURE = "TEMPERATURE"
+        const val NAME = "NAME"
     }
 }
 
@@ -67,7 +70,8 @@ data class ChatMessage(
 fun ChatBotScreen(onBackClick: () -> Unit,
                   initialBpm: String? = null,
                   initialPressure: String? = null,
-                  initialTemperature: String? = null) {
+                  initialTemperature: String? = null,
+                  name: String? = "") {
 
 
     val gradient = Brush.verticalGradient(
@@ -109,6 +113,7 @@ fun ChatBotScreen(onBackClick: () -> Unit,
                         put("bpm", initialBpm)
                         put("temperatura_corporal", initialTemperature)
                         put("presion_arterial", initialPressure)
+                        put("nombre", name)
                     }
                     print(BuildConfig.CHATBOT_URL + "/generateHealthReport")
                     val url = URL(BuildConfig.CHATBOT_URL + "/generateHealthReport")
