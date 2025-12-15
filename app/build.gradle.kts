@@ -22,11 +22,11 @@ android {
     buildTypes {
         debug {
 
-            buildConfigField("String", "USERS_URL", "\"http://10.0.2.2:3000/users\"")
-            buildConfigField("String", "MEDS_URL", "\"http://10.0.2.2:3000/meds\"")
-            buildConfigField("String", "ALERTS_URL", "\"http://10.0.2.2:3000/alerts\"")
-            buildConfigField("String", "CHATBOT_URL", "\"http://10.0.2.2:3000/chatbot\"")
-            buildConfigField("String", "VITALS_URL", "\"http://10.0.2.2:3000/vitals\"")
+            buildConfigField("String", "USERS_URL", "\"pulsebackend-git-main-darielsevillas-projects.vercel.app/users\"")
+            buildConfigField("String", "MEDS_URL", "\"pulsebackend-git-main-darielsevillas-projects.vercel.app/meds\"")
+            buildConfigField("String", "ALERTS_URL", "\"pulsebackend-git-main-darielsevillas-projects.vercel.app/alerts\"")
+            buildConfigField("String", "CHATBOT_URL", "\"pulsebackend-git-main-darielsevillas-projects.vercel.app/chatbot\"")
+            buildConfigField("String", "VITALS_URL", "\"pulsebackend-git-main-darielsevillas-projects.vercel.appvitals\"")
 
             /*
             buildConfigField("String", "USERS_URL", "\"http://192.168.0.6:3000/users\"")
