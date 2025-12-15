@@ -89,12 +89,6 @@ fun AddMedicineScreen(
     var adultoSeleccionado by remember { mutableStateOf<Usuario?>(null) }
     var expanded by remember { mutableStateOf(false) }
 
-    val targetUserId = if (type == "FAMILIAR") {
-        adultoSeleccionado!!.id
-    } else {
-        idUsuario
-    }
-
     if (type == "FAMILIAR") {
         LaunchedEffect(idUsuario) {
             adultosMayores = buscarAdultos(usersUrl, idUsuario)
@@ -195,7 +189,6 @@ fun AddMedicineScreen(
                             return@launch
                         }
 
-
                         if (type == "FAMILIAR" && adultoSeleccionado == null) {
                             Toast.makeText(
                                 context,
@@ -204,6 +197,18 @@ fun AddMedicineScreen(
                             ).show()
                             return@launch
                         }
+
+                        val targetUserId = if (type.equals("FAMILIAR", ignoreCase = true)) {
+                            val sel = adultoSeleccionado
+                            if (sel == null) {
+                                Toast.makeText(context, "Selecciona un adulto mayor", Toast.LENGTH_SHORT).show()
+                                return@launch
+                            }
+                            sel.id
+                        } else {
+                            idUsuario
+                        }
+
                         val success = if (existingMedicine == null) {
                             createMedicine(
                                 baseUrl = "$medsUrl/registerMed",
@@ -214,10 +219,7 @@ fun AddMedicineScreen(
                                 fechaFin = endDateBackend,
                                 horas = reminderTimes.toList(),
                                 idUsuario = targetUserId
-
                             )
-
-
 
                         } else {
                             println("MODIFY URL => $medsUrl/modifyMed")
