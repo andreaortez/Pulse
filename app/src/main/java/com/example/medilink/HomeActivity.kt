@@ -149,7 +149,6 @@ class HomeActivity : AppCompatActivity() {
                     val remindersToday = obtenerRecordatoriosHome(alertsEndpoint, userId, todayIso)
                     scheduleAlertsForToday(remindersToday)
 
-                    //medicamentos
                     val endpoint = if (userType.contains("FAMILIAR", ignoreCase = true)) {
                         "$medsBaseUrl/by-date-familiar"
                     } else {

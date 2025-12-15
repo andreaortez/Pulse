@@ -1,5 +1,6 @@
 package com.example.medilink.ui
 
+import android.R.attr.id
 import com.example.medilink.BuildConfig
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
@@ -206,7 +207,7 @@ fun AddMedicineScreen(
                                 fechaInicio = startDateBackend,
                                 fechaFin = endDateBackend,
                                 horas = reminderTimes.toList(),
-                                idUsuario = id
+                                idUsuario = id.toString()
 
                             )
 
@@ -228,7 +229,7 @@ fun AddMedicineScreen(
                                 fechaInicio = startDateBackend,
                                 fechaFin = endDateBackend,
                                 horas = reminderTimes.toList(),
-                                idUsuario = id
+                                idUsuario = id.toString()
                             )
                         }
 
