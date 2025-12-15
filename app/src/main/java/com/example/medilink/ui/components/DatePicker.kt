@@ -43,7 +43,7 @@ import com.example.medilink.ui.theme.CelesteVivido2
 fun DatePickerRange(
     startDateDisplay: String,
     endDateDisplay: String,
-    onDatesSelected: (startDisplay: String, endDisplay: String, startBackend: String, endBackend: String) -> Unit
+    onDatesSelected: (startDisplay: String, endDisplay: String) -> Unit
 ) {
     var openDialog by remember { mutableStateOf(false) }
     val dateRangeState = rememberDateRangePickerState()
@@ -127,7 +127,7 @@ fun DatePickerRange(
                             val startBackend = backendFormat.format(startDate)
                             val endBackend = backendFormat.format(endDate)
 
-                            onDatesSelected(startDisplay, endDisplay, startBackend, endBackend)
+                            onDatesSelected(startDisplay, endDisplay)
                         }
 
                         openDialog = false
@@ -224,11 +224,9 @@ fun DatePickerRangePreview() {
         DatePickerRange(
             startDateDisplay = startDateDisplay,
             endDateDisplay = endDateDisplay
-        ) { startDisp, endDisp, startBack, endBack ->
+        ) { startDisp, endDisp ->
             startDateDisplay = startDisp
             endDateDisplay = endDisp
-            startDateBackend = startBack
-            endDateBackend = endBack
         }
     }
 }
