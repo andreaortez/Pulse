@@ -83,14 +83,14 @@ fun VitalSignsScreen(
     idUsuario: String,
     tipoUsuario: String?
 ) {
-    Surface(                        
+    Surface(
         modifier = Modifier.fillMaxSize(),
         color = Color.White){
-    var bpm by remember { mutableStateOf("--") }
-    var pressure by remember { mutableStateOf("---/--") }
-    var temperature by remember { mutableStateOf("--") }
+        var bpm by remember { mutableStateOf("--") }
+        var pressure by remember { mutableStateOf("---/--") }
+        var temperature by remember { mutableStateOf("--") }
         var initialLoad by remember { mutableStateOf(false) }
-    val context = LocalContext.current
+        val context = LocalContext.current
 
         val users = remember {
             mutableStateListOf(
@@ -104,7 +104,7 @@ fun VitalSignsScreen(
         val selectedUserName = remember(selectedUserId, users) {
             users.firstOrNull { it.first == selectedUserId }?.second ?: "Seleccionar"
         }
-    //permisos para HealthConnect
+        //permisos para HealthConnect
         val permissions = remember {
             setOf(
                 HealthPermission.getReadPermission(HeartRateRecord::class),
@@ -122,64 +122,57 @@ fun VitalSignsScreen(
         }
 
         LaunchedEffect(Unit) {
-            Log.d("VitalSigns", "HC bootstrap...")
+            Log.d("VitalSigns", "HC bootstrap")
 
+            suspend fun simulateAndApply() {
+                val text = withContext(Dispatchers.IO) {
+                    val url = URL(BuildConfig.VITALS_URL + "/simulate")
+                    val conn = (url.openConnection() as HttpURLConnection).apply {
+                        requestMethod = "POST"
+                        connectTimeout = 10_000
+                        readTimeout = 10_000
+                        doOutput = true
+                        setRequestProperty("Content-Type", "application/json; charset=utf-8")
+                    }
+                    conn.outputStream.use { it.write(JSONObject().toString().toByteArray(Charsets.UTF_8)) }
+                    val responseCode = conn.responseCode
+                    val responseText = if (responseCode in 200..299) {
+                        conn.inputStream.bufferedReader().use { it.readText() }
+                    } else {
+                        conn.errorStream?.bufferedReader()?.use { it.readText() } ?: "Error HTTP $responseCode"
+                    }
+                    conn.disconnect()
+                    responseText
+                }
+
+                val json = JSONObject(text)
+                withContext(Dispatchers.Main) {
+                    bpm = json.optInt("bpm", -1).takeIf { it != -1 }?.toString() ?: "--"
+                    pressure = json.optString("presion", "---/--").ifBlank { "---/--" }
+                    temperature = json.optDouble("temperatura", Double.NaN)
+                        .takeIf { !it.isNaN() }
+                        ?.let { String.format("%.1f", it) } ?: "--"
+                }
+            }
+
+            var connected = true
             try {
                 val client = HealthConnectClient.getOrCreate(context)
-
                 val granted = withContext(Dispatchers.IO) {
                     client.permissionController.getGrantedPermissions()
                 }
-
                 hasPermissions = granted.containsAll(permissions)
-                Log.d("VitalSigns", "hasPermissions(initial)=$hasPermissions")
-
                 if (!hasPermissions) {
                     permissionsLauncher.launch(permissions)
-                    return@LaunchedEffect
+                    connected = false
                 }
             } catch (e: Exception) {
-                Log.e("VitalSigns", "Health Connect not available, using simulate", e)
+                connected = false
+            }
 
-
-                withContext(Dispatchers.IO) {
-                    runCatching {
-                        val url = URL(BuildConfig.VITALS_URL + "/simulate")
-                        val conn = (url.openConnection() as HttpURLConnection).apply {
-                            requestMethod = "POST"
-                            connectTimeout = 10_000
-                            readTimeout = 10_000
-                            doOutput = true
-                            setRequestProperty("Content-Type", "application/json; charset=utf-8")
-                        }
-
-                        conn.outputStream.use { os ->
-                            val input = JSONObject().toString().toByteArray(Charsets.UTF_8)
-                            os.write(input)
-                        }
-
-                        val responseCode = conn.responseCode
-                        val responseText = if (responseCode in 200..299) {
-                            conn.inputStream.bufferedReader().use { it.readText() }
-                        } else {
-                            conn.errorStream?.bufferedReader()?.use { it.readText() }
-                                ?: "Error HTTP $responseCode"
-                        }
-                        conn.disconnect()
-
-                        val json = JSONObject(responseText)
-
-                        val bpmValue = json.optInt("bpm", -1)
-                        if (bpmValue != -1) bpm = bpmValue.toString()
-
-                        val presionValue = json.optString("presion", "")
-                        if (presionValue.isNotBlank()) pressure = presionValue
-
-                        val tempValue = json.optDouble("temperatura", Double.NaN)
-                        if (!tempValue.isNaN()) temperature = String.format("%.1f", tempValue)
-                    }.onFailure { ex ->
-                        Log.e("VitalSigns", "simulate failed", ex)
-                    }
+            if (!connected) {
+                runCatching { simulateAndApply() }.onFailure {
+                    Log.e("VitalSigns", "simulate failed", it)
                 }
             }
 
@@ -224,8 +217,7 @@ fun VitalSignsScreen(
                         val responseText2 = if (responseCode2 in 200..299) {
                             conn2.inputStream.bufferedReader().use { it.readText() }
                         } else {
-                            conn2.errorStream?.bufferedReader()?.use { it.readText() }
-                                ?: "Error HTTP $responseCode2"
+                            conn2.errorStream?.bufferedReader()?.use { it.readText() } ?: "Error HTTP $responseCode2"
                         }
                         conn2.disconnect()
 
@@ -238,7 +230,6 @@ fun VitalSignsScreen(
                                 val id = adultoObj.optString("_id")
                                 val nombre = adultoObj.optString("nombre")
                                 val apellido = adultoObj.optString("apellido")
-
                                 if (id.isNotBlank() && users.none { it.first == id }) {
                                     users.add(id to "$nombre $apellido".trim())
                                 }
@@ -256,9 +247,8 @@ fun VitalSignsScreen(
         LaunchedEffect(hasPermissions) {
             if (!hasPermissions) return@LaunchedEffect
 
-            withContext(Dispatchers.IO) {
-
-                suspend fun simulateAndApply() {
+            suspend fun simulateAndApply() {
+                val text = withContext(Dispatchers.IO) {
                     val url = URL(BuildConfig.VITALS_URL + "/simulate")
                     val conn = (url.openConnection() as HttpURLConnection).apply {
                         requestMethod = "POST"
@@ -267,87 +257,73 @@ fun VitalSignsScreen(
                         doOutput = true
                         setRequestProperty("Content-Type", "application/json; charset=utf-8")
                     }
-
-                    conn.outputStream.use { os ->
-                        val input = JSONObject().toString().toByteArray(Charsets.UTF_8)
-                        os.write(input)
-                    }
-
+                    conn.outputStream.use { it.write(JSONObject().toString().toByteArray(Charsets.UTF_8)) }
                     val responseCode = conn.responseCode
                     val responseText = if (responseCode in 200..299) {
                         conn.inputStream.bufferedReader().use { it.readText() }
                     } else {
-                        conn.errorStream?.bufferedReader()?.use { it.readText() }
-                            ?: "Error HTTP $responseCode"
+                        conn.errorStream?.bufferedReader()?.use { it.readText() } ?: "Error HTTP $responseCode"
                     }
                     conn.disconnect()
-
-                    val json = JSONObject(responseText)
-
-                    val bpmValue = json.optInt("bpm", -1)
-                    if (bpmValue != -1) bpm = bpmValue.toString()
-
-                    val presionValue = json.optString("presion", "")
-                    if (presionValue.isNotBlank()) pressure = presionValue
-
-                    val tempValue = json.optDouble("temperatura", Double.NaN)
-                    if (!tempValue.isNaN()) temperature = String.format("%.1f", tempValue)
+                    responseText
                 }
 
-                val ok = runCatching {
-                    val client = HealthConnectClient.getOrCreate(context)
+                val json = JSONObject(text)
+                withContext(Dispatchers.Main) {
+                    bpm = json.optInt("bpm", -1).takeIf { it != -1 }?.toString() ?: "--"
+                    pressure = json.optString("presion", "---/--").ifBlank { "---/--" }
+                    temperature = json.optDouble("temperatura", Double.NaN)
+                        .takeIf { !it.isNaN() }
+                        ?.let { String.format("%.1f", it) } ?: "--"
+                }
+            }
 
-                    val now = Instant.now()
-                    val time = TimeRangeFilter.after(now.minus(24, ChronoUnit.HOURS))
+            var ok = false
+            try {
+                val client = HealthConnectClient.getOrCreate(context)
+                val now = Instant.now()
+                val time = TimeRangeFilter.after(now.minus(24, ChronoUnit.HOURS))
 
-                    val hr = client.readRecords(
-                        ReadRecordsRequest(
-                            recordType = HeartRateRecord::class,
-                            timeRangeFilter = time
-                        )
-                    )
-                    val bp = client.readRecords(
-                        ReadRecordsRequest(
-                            recordType = BloodPressureRecord::class,
-                            timeRangeFilter = time
-                        )
-                    )
-                    val temp = client.readRecords(
-                        ReadRecordsRequest(
-                            recordType = BodyTemperatureRecord::class,
-                            timeRangeFilter = time
-                        )
-                    )
+                val hr = withContext(Dispatchers.IO) {
+                    client.readRecords(ReadRecordsRequest(HeartRateRecord::class, timeRangeFilter = time))
+                }
+                val bp = withContext(Dispatchers.IO) {
+                    client.readRecords(ReadRecordsRequest(BloodPressureRecord::class, timeRangeFilter = time))
+                }
+                val tp = withContext(Dispatchers.IO) {
+                    client.readRecords(ReadRecordsRequest(BodyTemperatureRecord::class, timeRangeFilter = time))
+                }
 
-                    // Si cualquiera falta, usamos simulate
-                    if (hr.records.isEmpty() || bp.records.isEmpty() || temp.records.isEmpty()) {
-                        false
-                    } else {
-                        val latestHR = hr.records.maxByOrNull { it.startTime }
-                        val latestSample = latestHR?.samples?.maxByOrNull { it.time }
-                        latestSample?.beatsPerMinute?.toInt()?.let { bpm = it.toString() }
+                if (hr.records.isNotEmpty() || bp.records.isNotEmpty() || tp.records.isNotEmpty()) {
+                    withContext(Dispatchers.Main) {
+                        hr.records.maxByOrNull { it.startTime }
+                            ?.samples?.maxByOrNull { it.time }
+                            ?.beatsPerMinute?.toInt()
+                            ?.let { bpm = it.toString() }
 
-                        val latestBP = bp.records.maxByOrNull { it.time }
-                        val sys = latestBP?.systolic?.inMillimetersOfMercury?.toInt()
-                        val dia = latestBP?.diastolic?.inMillimetersOfMercury?.toInt()
-                        if (sys != null && dia != null) pressure = "$sys/$dia"
+                        bp.records.maxByOrNull { it.time }?.let {
+                            val s = it.systolic?.inMillimetersOfMercury?.toInt()
+                            val d = it.diastolic?.inMillimetersOfMercury?.toInt()
+                            if (s != null && d != null) pressure = "$s/$d"
+                        }
 
-                        val latestTemp = temp.records.maxByOrNull { it.time }?.temperature?.inCelsius
-                        latestTemp?.let { temperature = String.format("%.1f", it) }
-
-                        true
+                        tp.records.maxByOrNull { it.time }
+                            ?.temperature?.inCelsius
+                            ?.let { temperature = String.format("%.1f", it) }
                     }
-                }.getOrElse {
-                    Log.e("VitalSigns", "HC read failed", it)
-                    false
+                    ok = true
                 }
+            } catch (e: Exception) {
+                ok = false
+            }
 
-                if (!ok) {
-                    runCatching { simulateAndApply() }
-                        .onFailure { ex -> Log.e("VitalSigns", "simulate failed", ex) }
+            if (!ok) {
+                runCatching { simulateAndApply() }.onFailure {
+                    Log.e("VitalSigns", "simulate failed", it)
                 }
+            }
 
-                // Post al backend con lo que haya (HC o simulate)
+            withContext(Dispatchers.IO) {
                 runCatching {
                     val bodyJson = JSONObject().apply {
                         put("adultoMayorId", idUsuario)
@@ -378,7 +354,6 @@ fun VitalSignsScreen(
                 }
             }
         }
-
 
         LaunchedEffect(selectedUserId) {
             withContext(Dispatchers.IO) {
@@ -438,219 +413,219 @@ fun VitalSignsScreen(
 
 
         val gradient = Brush.verticalGradient(
-        colors = listOf(
-            Color(0xFF2196F3),
-            Color(0xFF1565C0)
+            colors = listOf(
+                Color(0xFF2196F3),
+                Color(0xFF1565C0)
+            )
         )
-    )
 
-    Scaffold(
-        containerColor = Color.Transparent,
-        topBar = {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(gradient)
-            ) {
-                CenterAlignedTopAppBar(
-                    title = {
-                        Text(
-                            text = "Signos vitales",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 20.sp,
-                            color = Color.White
-                        )
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = onBackClick) {
-                            Icon(
-                                imageVector = Icons.Default.ArrowBack,
-                                contentDescription = "Back",
-                                tint = Color.White
+        Scaffold(
+            containerColor = Color.Transparent,
+            topBar = {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(gradient)
+                ) {
+                    CenterAlignedTopAppBar(
+                        title = {
+                            Text(
+                                text = "Signos vitales",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 20.sp,
+                                color = Color.White
                             )
-                        }
-                    },
+                        },
+                        navigationIcon = {
+                            IconButton(onClick = onBackClick) {
+                                Icon(
+                                    imageVector = Icons.Default.ArrowBack,
+                                    contentDescription = "Back",
+                                    tint = Color.White
+                                )
+                            }
+                        },
 
-                    actions = {
-                        if(isFamiliar) {
-                            Box {
+                        actions = {
+                            if(isFamiliar) {
+                                Box {
 
-                                TextButton(
-                                    onClick = { expanded = true },
-                                    colors = ButtonDefaults.textButtonColors(
-                                        contentColor = Color.White
-                                    ),
-                                    modifier = Modifier.padding(end = 6.dp)
-                                ) {
-                                    Text(
-                                        text = selectedUserName,
-                                        maxLines = 1
-                                    )
-                                }
-
-
-                                DropdownMenu(
-                                    expanded = expanded,
-                                    onDismissRequest = { expanded = false }
-                                ) {
-                                    users.forEach { (id, name) ->
-                                        DropdownMenuItem(
-                                            text = { Text(name) },
-                                            onClick = {
-                                                expanded = false
-                                                selectedUserId = id
-                                            }
+                                    TextButton(
+                                        onClick = { expanded = true },
+                                        colors = ButtonDefaults.textButtonColors(
+                                            contentColor = Color.White
+                                        ),
+                                        modifier = Modifier.padding(end = 6.dp)
+                                    ) {
+                                        Text(
+                                            text = selectedUserName,
+                                            maxLines = 1
                                         )
+                                    }
+
+
+                                    DropdownMenu(
+                                        expanded = expanded,
+                                        onDismissRequest = { expanded = false }
+                                    ) {
+                                        users.forEach { (id, name) ->
+                                            DropdownMenuItem(
+                                                text = { Text(name) },
+                                                onClick = {
+                                                    expanded = false
+                                                    selectedUserId = id
+                                                }
+                                            )
+                                        }
                                     }
                                 }
                             }
-                        }
-                    },
-                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                        containerColor = Color.Transparent,
-                        titleContentColor = Color.White,
-                        navigationIconContentColor = Color.White,
-                        actionIconContentColor = Color.White
+                        },
+                        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                            containerColor = Color.Transparent,
+                            titleContentColor = Color.White,
+                            navigationIconContentColor = Color.White,
+                            actionIconContentColor = Color.White
+                        )
+
                     )
-
-                )
-            }
-        },
-        bottomBar = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.White)
-                    .padding(horizontal = 16.dp, vertical = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-
-                OutlinedButton(
-                    onClick = {
-                        if (bpm.isBlank() || pressure.isBlank() || temperature.isBlank()) {
-                            Toast.makeText(
-                                context,
-                                "Completa los campos antes de analizar",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        } else {
-                            val name = if (selectedUserName != "Seleccionar" && selectedUserName != "Mis datos") {
-                                selectedUserName
-                            } else {
-                                ""
-                            }
-                            onChatbotClick(bpm, pressure, temperature, name );
-                        }
-                    },
+                }
+            },
+            bottomBar = {
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(50.dp),
-                    shape = RoundedCornerShape(18.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        containerColor = AzulOscuro,
-                        contentColor = Color.White
-                    )
+                        .background(Color.White)
+                        .padding(horizontal = 16.dp, vertical = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.SmartToy,
-                        contentDescription = "Análisis chatbot"
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Analizar con chatbot",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
+
+                    OutlinedButton(
+                        onClick = {
+                            if (bpm.isBlank() || pressure.isBlank() || temperature.isBlank()) {
+                                Toast.makeText(
+                                    context,
+                                    "Completa los campos antes de analizar",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            } else {
+                                val name = if (selectedUserName != "Seleccionar" && selectedUserName != "Mis datos") {
+                                    selectedUserName
+                                } else {
+                                    ""
+                                }
+                                onChatbotClick(bpm, pressure, temperature, name );
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp),
+                        shape = RoundedCornerShape(18.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = AzulOscuro,
+                            contentColor = Color.White
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.SmartToy,
+                            contentDescription = "Análisis chatbot"
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Analizar con chatbot",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
                 }
             }
+        ) { paddingValues ->
+            Column(
+                modifier = Modifier
+                    .padding(paddingValues)
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
+            ) {
+
+
+                SummaryCard(
+                    bpm = bpm,
+                    pressure = pressure,
+                    temperature = temperature
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = "Bienvenido! Estos son sus signos vitales",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = AzulNegro,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+
+                VitalInputCard(
+                    title = "Frecuencia cardíaca",
+                    subtitle = "Latidos por minuto",
+                    icon = Icons.Default.Favorite,
+                    iconTint = Color(0xFFE53935),
+                    value = bpm,
+                    unit = "bpm",
+                    keyboardType = KeyboardType.Number,
+                    onValueChange = { value ->
+                        if (value.all { it.isDigit() } || value.isBlank()) {
+                            bpm = value
+                        }
+                    }
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                VitalInputCard(
+                    title = "Presión arterial",
+                    subtitle = "Sistólica / diastólica",
+                    icon = Icons.Default.MonitorHeart,
+                    iconTint = Color(0xFF43A047),
+                    value = pressure,
+                    unit = "mmHg",
+                    keyboardType = KeyboardType.Text,
+                    onValueChange = { value ->
+                        if (value.all { it.isDigit() || it == '/' } || value.isBlank()) {
+                            pressure = value
+                        }
+                    }
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Card temperatura
+                VitalInputCard(
+                    title = "Temperatura corporal",
+                    subtitle = "En grados Celsius",
+                    icon = Icons.Default.Thermostat,
+                    iconTint = Color(0xFFFFA000),
+                    value = temperature,
+                    unit = "°C",
+                    keyboardType = KeyboardType.Number,
+                    onValueChange = { value ->
+                        if (value.matches(Regex("""\d*\.?\d*""")) || value.isBlank()) {
+                            temperature = value
+                        }
+                    },
+                    showTrailingUnitChip = true
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = "Los valores mostrados son una referencia general y no sustituyen la evaluación médica.",
+                    fontSize = 12.sp,
+                    color = Color.Gray,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+            }
         }
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .padding(paddingValues)
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp, vertical = 12.dp)
-        ) {
-
-
-            SummaryCard(
-                bpm = bpm,
-                pressure = pressure,
-                temperature = temperature
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(
-                text = "Bienvenido! Estos son sus signos vitales",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = AzulNegro,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-
-            VitalInputCard(
-                title = "Frecuencia cardíaca",
-                subtitle = "Latidos por minuto",
-                icon = Icons.Default.Favorite,
-                iconTint = Color(0xFFE53935),
-                value = bpm,
-                unit = "bpm",
-                keyboardType = KeyboardType.Number,
-                onValueChange = { value ->
-                    if (value.all { it.isDigit() } || value.isBlank()) {
-                        bpm = value
-                    }
-                }
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            VitalInputCard(
-                title = "Presión arterial",
-                subtitle = "Sistólica / diastólica",
-                icon = Icons.Default.MonitorHeart,
-                iconTint = Color(0xFF43A047),
-                value = pressure,
-                unit = "mmHg",
-                keyboardType = KeyboardType.Text,
-                onValueChange = { value ->
-                    if (value.all { it.isDigit() || it == '/' } || value.isBlank()) {
-                        pressure = value
-                    }
-                }
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Card temperatura
-            VitalInputCard(
-                title = "Temperatura corporal",
-                subtitle = "En grados Celsius",
-                icon = Icons.Default.Thermostat,
-                iconTint = Color(0xFFFFA000),
-                value = temperature,
-                unit = "°C",
-                keyboardType = KeyboardType.Number,
-                onValueChange = { value ->
-                    if (value.matches(Regex("""\d*\.?\d*""")) || value.isBlank()) {
-                        temperature = value
-                    }
-                },
-                showTrailingUnitChip = true
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = "Los valores mostrados son una referencia general y no sustituyen la evaluación médica.",
-                fontSize = 12.sp,
-                color = Color.Gray,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-        }
-    }
-}}
+    }}
 
 @Composable
 private fun SummaryCard(

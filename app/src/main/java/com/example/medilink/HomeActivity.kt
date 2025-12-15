@@ -10,6 +10,7 @@ import android.util.Log
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.cardview.widget.CardView
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -43,12 +44,15 @@ data class AdultoVinculado(
 data class HomeReminder(
     val medId: String,
     val nombre: String,
-    val proximoRecordatorioTexto: String,
     val usuarioId: String,
     val forma: String,
     val cantidad: Int,
+    val fechaInicio: String,
+    val fechaFin: String,
+    val horas: List<String>,
     val horasDelDia: List<String>
 )
+
 
 class HomeActivity : AppCompatActivity() {
     private lateinit var rvMedicines: RecyclerView
@@ -83,10 +87,11 @@ class HomeActivity : AppCompatActivity() {
         }
 
         //spinner
+        val spinnerAdultosCard = findViewById<androidx.cardview.widget.CardView>(R.id.spinnerAdultosCard)
         val spinnerAdultos = findViewById<android.widget.Spinner>(R.id.spinnerAdultos)
 
         if (!userType.contains("FAMILIAR", ignoreCase = true)) {
-            spinnerAdultos.visibility = View.GONE
+            spinnerAdultosCard.visibility = View.GONE
         }
 
         val rvDays = findViewById<RecyclerView>(R.id.rvDays)
@@ -131,7 +136,6 @@ class HomeActivity : AppCompatActivity() {
                     DateTimeFormatter.ofPattern("dd MMM", localeEs)
                 )
 
-                // 🔹 Actualizamos la fecha para el backend
                 selectedDateIso = selectedDate.format(DateTimeFormatter.ISO_LOCAL_DATE)
 
                 lifecycleScope.launch {
@@ -147,7 +151,6 @@ class HomeActivity : AppCompatActivity() {
                     val remindersToday = obtenerRecordatoriosHome(alertsEndpoint, userId, todayIso)
                     scheduleAlertsForToday(remindersToday)
 
-                    //medicamentos
                     val endpoint = if (userType.contains("FAMILIAR", ignoreCase = true)) {
                         "$medsBaseUrl/by-date-familiar"
                     } else {
@@ -167,18 +170,22 @@ class HomeActivity : AppCompatActivity() {
                     val medicines = remindersFiltrados.map { reminder ->
 
                         val iconRes = when (reminder.forma.lowercase(Locale.ROOT)) {
-                            "Cápsula" -> R.drawable.ic_capsule
-                            "Tableta" -> R.drawable.ic_tablet
-                            "Solución" -> R.drawable.ic_solution
+                            "cápsula" -> R.drawable.ic_capsule
+                            "tableta" -> R.drawable.ic_tablet
+                            "solución" -> R.drawable.ic_solution
                             else -> R.drawable.ic_gutte
                         }
+
 
                         MedicineUi(
                             id = reminder.medId,
                             name = reminder.nombre,
-                            timeText = reminder.proximoRecordatorioTexto,
                             quantity = reminder.cantidad,
-                            iconRes = iconRes
+                            iconRes = iconRes,
+                            fechaInicio = reminder.fechaInicio,
+                            fechaFin = reminder.fechaFin,
+                            forma = reminder.forma,
+                            horas = reminder.horas
                         )
                     }
 
@@ -190,6 +197,7 @@ class HomeActivity : AppCompatActivity() {
                         tvEmptyMedicines.visibility = View.GONE
                         rvMedicines.adapter = MedicinesAdapter(
                             items = medicines,
+                            selectedDateIso = selectedDateIso,
                             onCheckedChange = { med, checked ->
                                 Log.d("HomeActivity", "Medicamento ${med.name} tomado = $checked")
                             },
@@ -254,7 +262,7 @@ class HomeActivity : AppCompatActivity() {
                     spinnerAdultos.adapter = adapterSpinner
                     spinnerAdultos.visibility = View.VISIBLE
 
-                    // seleccionar primero por defecto
+
                     selectedAdultId = adultos.first().id
 
                     spinnerAdultos.onItemSelectedListener =
@@ -266,7 +274,7 @@ class HomeActivity : AppCompatActivity() {
                                 id: Long
                             ) {
                                 selectedAdultId = adultos[position].id
-                                // recargar medicamentos para ese adulto y fecha actual
+
                                 loadMedicines()
                             }
 
@@ -325,9 +333,12 @@ class HomeActivity : AppCompatActivity() {
                     MedicineUi(
                         id = reminder.medId,
                         name = reminder.nombre,
-                        timeText = reminder.proximoRecordatorioTexto,
                         quantity = reminder.cantidad,
-                        iconRes = iconRes
+                        iconRes = iconRes,
+                        fechaInicio = reminder.fechaInicio,
+                        fechaFin = reminder.fechaFin,
+                        forma = reminder.forma,
+                        horas = reminder.horas
                     )
                 }
 
@@ -340,6 +351,7 @@ class HomeActivity : AppCompatActivity() {
 
                     val medicinesAdapter = MedicinesAdapter(
                         items = medicines,
+                        selectedDateIso = selectedDateIso,
                         onCheckedChange = { med, checked ->
                             Log.d("HomeActivity", "Medicamento ${med.name} tomado = $checked")
                         },
@@ -439,9 +451,12 @@ class HomeActivity : AppCompatActivity() {
                 MedicineUi(
                     id = reminder.medId,
                     name = reminder.nombre,
-                    timeText = reminder.proximoRecordatorioTexto,
                     quantity = reminder.cantidad,
-                    iconRes = iconRes
+                    iconRes = iconRes,
+                    fechaInicio = reminder.fechaInicio,
+                    fechaFin = reminder.fechaFin,
+                    forma = reminder.forma,
+                    horas = reminder.horas
                 )
             }
 
@@ -454,6 +469,7 @@ class HomeActivity : AppCompatActivity() {
 
                 val medicinesAdapter = MedicinesAdapter(
                     items = medicines,
+                    selectedDateIso = selectedDateIso,
                     onCheckedChange = { med, checked ->
                         Log.d("HomeActivity", "Medicamento ${med.name} tomado = $checked")
                     },
@@ -678,35 +694,26 @@ suspend fun obtenerRecordatoriosHome(
                 }
             }
 
-            val horaRaw = horasList.firstOrNull() ?: ""
 
-            val textoHora = if (horaRaw.isNotBlank()) {
-                try {
-                    val parser = SimpleDateFormat("HH:mm", Locale.getDefault())
-                    val date = parser.parse(horaRaw)
-                    val fmt = SimpleDateFormat("h:mm a", Locale("es", "ES"))
-                    val horaBonita = fmt.format(date!!).lowercase()
 
-                    "A las $horaBonita"
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    "Sin hora específica"
-                }
-            } else {
-                "Sin hora específica"
-            }
 
             resultado.add(
                 HomeReminder(
                     medId = medId,
                     nombre = nombre,
-                    proximoRecordatorioTexto = textoHora,
                     usuarioId = usuarioId,
                     forma = forma,
                     cantidad = cantidad,
-                    horasDelDia = horasList
+                    fechaInicio = fechaInicioStr.take(10),
+                    fechaFin = fechaFinStr.take(10),
+                    horas = horasList,
+
+                    horasDelDia = horasList,
+
+
                 )
             )
+
         }
     } catch (e: Exception) {
         e.printStackTrace()

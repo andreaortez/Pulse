@@ -1,5 +1,6 @@
 package com.example.medilink.ui
 
+
 import com.example.medilink.BuildConfig
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
@@ -49,6 +50,7 @@ import com.example.medilink.ui.theme.Azul
 import com.example.medilink.ui.theme.AzulNegro
 import com.example.medilink.ui.theme.AzulOscuro
 import org.json.JSONArray
+import java.lang.System.console
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -113,6 +115,26 @@ fun AddMedicineScreen(
             Color(0xFF1565C0)
         )
     )
+    LaunchedEffect(existingMedicine?.id) {
+        existingMedicine?.let { med ->
+            medicineName = med.name
+            amount = med.quantity.toString()
+
+
+            startDateBackend = med.fechaInicio
+            endDateBackend = med.fechaFin
+            startDateDisplay = med.fechaInicio
+            endDateDisplay = med.fechaFin
+
+
+            reminderTimes.clear()
+            reminderTimes.addAll(med.horas)
+
+            selectedForm = formas.indexOf(med.forma).coerceAtLeast(0)
+        }
+    }
+
+
 
     Scaffold(
         topBar = {
@@ -176,36 +198,49 @@ fun AddMedicineScreen(
                             return@launch
                         }
 
-                        if (oldMedId != null) {
-                            val deleted = deleteMedicineById(
-                                baseUrl = "$medsUrl/deleteMed",
-                                medId = oldMedId
-                            )
-                            if (!deleted) {
-                                Toast.makeText(
-                                    context,
-                                    "No se pudo eliminar la versión anterior",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-
+                        val targetUserId = if (type.equals("FAMILIAR", ignoreCase = true)) {
+                            val sel = adultoSeleccionado
+                            if (sel == null) {
+                                Toast.makeText(context, "Selecciona un adulto mayor", Toast.LENGTH_SHORT).show()
+                                return@launch
                             }
+                            sel.id
+                        } else {
+                            idUsuario
                         }
-                        val id = if(type=="FAMILIAR"){
-                                adultoSeleccionado!!.id
-                            }else{
-                                idUsuario
-                            }
 
-                        val success = createMedicine(
-                            baseUrl = "$medsUrl/registerMed",
-                            nombre = medicineName,
-                            cantidad = amount,
-                            tipo = formas[selectedForm],
-                            fechaInicio = startDateBackend,
-                            fechaFin = endDateBackend,
-                            horas = reminderTimes.toList(),
-                            idUsuario = id
-                        )
+                        val success = if (existingMedicine == null) {
+                            createMedicine(
+                                baseUrl = "$medsUrl/registerMed",
+                                nombre = medicineName,
+                                cantidad = amount,
+                                tipo = formas[selectedForm],
+                                fechaInicio = startDateBackend,
+                                fechaFin = endDateBackend,
+                                horas = reminderTimes.toList(),
+                                idUsuario = targetUserId
+                            )
+
+                        } else {
+                            println("MODIFY URL => $medsUrl/modifyMed")
+                            println("MODIFY ID  => $oldMedId")
+
+                            println("EDIT existingMedicine.id=${existingMedicine?.id} oldMedId=$oldMedId")
+
+
+                            modifyMedicine(
+                                baseUrl = "$medsUrl/modifyMed",
+                                medId = existingMedicine.id,
+                                nombre = medicineName,
+                                cantidad = amount,
+                                tipo = formas[selectedForm],
+                                fechaInicio = startDateBackend,
+                                fechaFin = endDateBackend,
+                                horas = reminderTimes.toList(),
+                                idUsuario = targetUserId
+                            )
+                        }
+
 
                         if (success) {
                             Toast.makeText(
@@ -440,7 +475,7 @@ fun AddMedicineScreen(
                 endDateBackend = endBack
             }
 
-            // Título sección de recordatorios
+
             Text(
                 text = "Añadir Recordatorios",
                 fontSize = 20.sp,
@@ -493,7 +528,6 @@ fun AddMedicineScreen(
                 )
             }
 
-            // Lista de cards, una por cada hora seleccionada
             if (reminderTimes.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -583,7 +617,7 @@ suspend fun createMedicine(
                 val medicamentoJson = json.optJSONObject("medicamento")
                 val medId = medicamentoJson?.optString("_id")
 
-                // Crear recordatorio inicial usando la primera hora
+                // 2) Crear recordatorio inicial usando la primera hora
                 val primeraHora = horas.firstOrNull()
 
                 if (!medId.isNullOrBlank() && !primeraHora.isNullOrBlank()) {
@@ -627,6 +661,7 @@ suspend fun createMedicine(
 
                 true
             } else {
+                // Error en creación de medicamento
                 val errorText = conn.errorStream?.bufferedReader()?.use { it.readText() }
                 conn.disconnect()
                 println("Error creando medicamento: $errorText")
@@ -638,6 +673,58 @@ suspend fun createMedicine(
         }
     }
 }
+suspend fun modifyMedicine(
+    baseUrl: String,
+    medId: String,
+    nombre: String,
+    cantidad: String,
+    tipo: String,
+    fechaInicio: String,
+    fechaFin: String,
+    horas: List<String>,
+    idUsuario: String
+): Boolean = withContext(Dispatchers.IO) {
+    try {
+        val cantInt = cantidad.toIntOrNull() ?: 1
+
+        val bodyJson = JSONObject().apply {
+            put("_id", medId)
+            put("nombre", nombre)
+            put("cantidad", cantInt)
+            put("forma", tipo)
+            put("fecha_inicio", fechaInicio)
+            put("fecha_fin", fechaFin)
+            put("horas_recordatorio", JSONArray(horas))
+            put("id_usuario", idUsuario)
+        }
+
+        val conn = (URL(baseUrl).openConnection() as HttpURLConnection).apply {
+            requestMethod = "POST"
+            doOutput = true
+            setRequestProperty("Content-Type", "application/json; charset=utf-8")
+        }
+
+        conn.outputStream.use {
+            it.write(bodyJson.toString().toByteArray(Charsets.UTF_8))
+        }
+
+        val code = conn.responseCode
+        val body = if (code in 200..299) {
+            conn.inputStream.bufferedReader().readText()
+        } else {
+            conn.errorStream?.bufferedReader()?.readText()
+        }
+
+        println("MODIFY responseCode=$code body=$body")
+
+        conn.disconnect()
+        code in 200..299
+    } catch (e: Exception) {
+        e.printStackTrace()
+        false
+    }
+}
+
 
 suspend fun deleteMedicineById(
     baseUrl: String,
@@ -666,6 +753,7 @@ suspend fun deleteMedicineById(
         false
     }
 }
+
 
 suspend fun buscarAdultos(
     baseUrl: String,
