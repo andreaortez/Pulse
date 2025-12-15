@@ -83,14 +83,14 @@ fun VitalSignsScreen(
     idUsuario: String,
     tipoUsuario: String?
 ) {
-    Surface(                        
+    Surface(
         modifier = Modifier.fillMaxSize(),
         color = Color.White){
-    var bpm by remember { mutableStateOf("--") }
-    var pressure by remember { mutableStateOf("---/--") }
-    var temperature by remember { mutableStateOf("--") }
+        var bpm by remember { mutableStateOf("--") }
+        var pressure by remember { mutableStateOf("---/--") }
+        var temperature by remember { mutableStateOf("--") }
         var initialLoad by remember { mutableStateOf(false) }
-    val context = LocalContext.current
+        val context = LocalContext.current
 
         val users = remember {
             mutableStateListOf(
@@ -104,7 +104,7 @@ fun VitalSignsScreen(
         val selectedUserName = remember(selectedUserId, users) {
             users.firstOrNull { it.first == selectedUserId }?.second ?: "Seleccionar"
         }
-    //permisos para HealthConnect
+        //permisos para HealthConnect
         val permissions = remember {
             setOf(
                 HealthPermission.getReadPermission(HeartRateRecord::class),
@@ -413,219 +413,219 @@ fun VitalSignsScreen(
 
 
         val gradient = Brush.verticalGradient(
-        colors = listOf(
-            Color(0xFF2196F3),
-            Color(0xFF1565C0)
+            colors = listOf(
+                Color(0xFF2196F3),
+                Color(0xFF1565C0)
+            )
         )
-    )
 
-    Scaffold(
-        containerColor = Color.Transparent,
-        topBar = {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(gradient)
-            ) {
-                CenterAlignedTopAppBar(
-                    title = {
-                        Text(
-                            text = "Signos vitales",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 20.sp,
-                            color = Color.White
-                        )
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = onBackClick) {
-                            Icon(
-                                imageVector = Icons.Default.ArrowBack,
-                                contentDescription = "Back",
-                                tint = Color.White
+        Scaffold(
+            containerColor = Color.Transparent,
+            topBar = {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(gradient)
+                ) {
+                    CenterAlignedTopAppBar(
+                        title = {
+                            Text(
+                                text = "Signos vitales",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 20.sp,
+                                color = Color.White
                             )
-                        }
-                    },
+                        },
+                        navigationIcon = {
+                            IconButton(onClick = onBackClick) {
+                                Icon(
+                                    imageVector = Icons.Default.ArrowBack,
+                                    contentDescription = "Back",
+                                    tint = Color.White
+                                )
+                            }
+                        },
 
-                    actions = {
-                        if(isFamiliar) {
-                            Box {
+                        actions = {
+                            if(isFamiliar) {
+                                Box {
 
-                                TextButton(
-                                    onClick = { expanded = true },
-                                    colors = ButtonDefaults.textButtonColors(
-                                        contentColor = Color.White
-                                    ),
-                                    modifier = Modifier.padding(end = 6.dp)
-                                ) {
-                                    Text(
-                                        text = selectedUserName,
-                                        maxLines = 1
-                                    )
-                                }
-
-
-                                DropdownMenu(
-                                    expanded = expanded,
-                                    onDismissRequest = { expanded = false }
-                                ) {
-                                    users.forEach { (id, name) ->
-                                        DropdownMenuItem(
-                                            text = { Text(name) },
-                                            onClick = {
-                                                expanded = false
-                                                selectedUserId = id
-                                            }
+                                    TextButton(
+                                        onClick = { expanded = true },
+                                        colors = ButtonDefaults.textButtonColors(
+                                            contentColor = Color.White
+                                        ),
+                                        modifier = Modifier.padding(end = 6.dp)
+                                    ) {
+                                        Text(
+                                            text = selectedUserName,
+                                            maxLines = 1
                                         )
+                                    }
+
+
+                                    DropdownMenu(
+                                        expanded = expanded,
+                                        onDismissRequest = { expanded = false }
+                                    ) {
+                                        users.forEach { (id, name) ->
+                                            DropdownMenuItem(
+                                                text = { Text(name) },
+                                                onClick = {
+                                                    expanded = false
+                                                    selectedUserId = id
+                                                }
+                                            )
+                                        }
                                     }
                                 }
                             }
-                        }
-                    },
-                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                        containerColor = Color.Transparent,
-                        titleContentColor = Color.White,
-                        navigationIconContentColor = Color.White,
-                        actionIconContentColor = Color.White
+                        },
+                        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                            containerColor = Color.Transparent,
+                            titleContentColor = Color.White,
+                            navigationIconContentColor = Color.White,
+                            actionIconContentColor = Color.White
+                        )
+
                     )
-
-                )
-            }
-        },
-        bottomBar = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.White)
-                    .padding(horizontal = 16.dp, vertical = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-
-                OutlinedButton(
-                    onClick = {
-                        if (bpm.isBlank() || pressure.isBlank() || temperature.isBlank()) {
-                            Toast.makeText(
-                                context,
-                                "Completa los campos antes de analizar",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        } else {
-                            val name = if (selectedUserName != "Seleccionar" && selectedUserName != "Mis datos") {
-                                selectedUserName
-                            } else {
-                                ""
-                            }
-                            onChatbotClick(bpm, pressure, temperature, name );
-                        }
-                    },
+                }
+            },
+            bottomBar = {
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(50.dp),
-                    shape = RoundedCornerShape(18.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        containerColor = AzulOscuro,
-                        contentColor = Color.White
-                    )
+                        .background(Color.White)
+                        .padding(horizontal = 16.dp, vertical = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.SmartToy,
-                        contentDescription = "Análisis chatbot"
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Analizar con chatbot",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
+
+                    OutlinedButton(
+                        onClick = {
+                            if (bpm.isBlank() || pressure.isBlank() || temperature.isBlank()) {
+                                Toast.makeText(
+                                    context,
+                                    "Completa los campos antes de analizar",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            } else {
+                                val name = if (selectedUserName != "Seleccionar" && selectedUserName != "Mis datos") {
+                                    selectedUserName
+                                } else {
+                                    ""
+                                }
+                                onChatbotClick(bpm, pressure, temperature, name );
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp),
+                        shape = RoundedCornerShape(18.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = AzulOscuro,
+                            contentColor = Color.White
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.SmartToy,
+                            contentDescription = "Análisis chatbot"
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Analizar con chatbot",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
                 }
             }
+        ) { paddingValues ->
+            Column(
+                modifier = Modifier
+                    .padding(paddingValues)
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
+            ) {
+
+
+                SummaryCard(
+                    bpm = bpm,
+                    pressure = pressure,
+                    temperature = temperature
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = "Bienvenido! Estos son sus signos vitales",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = AzulNegro,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+
+                VitalInputCard(
+                    title = "Frecuencia cardíaca",
+                    subtitle = "Latidos por minuto",
+                    icon = Icons.Default.Favorite,
+                    iconTint = Color(0xFFE53935),
+                    value = bpm,
+                    unit = "bpm",
+                    keyboardType = KeyboardType.Number,
+                    onValueChange = { value ->
+                        if (value.all { it.isDigit() } || value.isBlank()) {
+                            bpm = value
+                        }
+                    }
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                VitalInputCard(
+                    title = "Presión arterial",
+                    subtitle = "Sistólica / diastólica",
+                    icon = Icons.Default.MonitorHeart,
+                    iconTint = Color(0xFF43A047),
+                    value = pressure,
+                    unit = "mmHg",
+                    keyboardType = KeyboardType.Text,
+                    onValueChange = { value ->
+                        if (value.all { it.isDigit() || it == '/' } || value.isBlank()) {
+                            pressure = value
+                        }
+                    }
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Card temperatura
+                VitalInputCard(
+                    title = "Temperatura corporal",
+                    subtitle = "En grados Celsius",
+                    icon = Icons.Default.Thermostat,
+                    iconTint = Color(0xFFFFA000),
+                    value = temperature,
+                    unit = "°C",
+                    keyboardType = KeyboardType.Number,
+                    onValueChange = { value ->
+                        if (value.matches(Regex("""\d*\.?\d*""")) || value.isBlank()) {
+                            temperature = value
+                        }
+                    },
+                    showTrailingUnitChip = true
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = "Los valores mostrados son una referencia general y no sustituyen la evaluación médica.",
+                    fontSize = 12.sp,
+                    color = Color.Gray,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+            }
         }
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .padding(paddingValues)
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp, vertical = 12.dp)
-        ) {
-
-
-            SummaryCard(
-                bpm = bpm,
-                pressure = pressure,
-                temperature = temperature
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(
-                text = "Bienvenido! Estos son sus signos vitales",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = AzulNegro,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-
-            VitalInputCard(
-                title = "Frecuencia cardíaca",
-                subtitle = "Latidos por minuto",
-                icon = Icons.Default.Favorite,
-                iconTint = Color(0xFFE53935),
-                value = bpm,
-                unit = "bpm",
-                keyboardType = KeyboardType.Number,
-                onValueChange = { value ->
-                    if (value.all { it.isDigit() } || value.isBlank()) {
-                        bpm = value
-                    }
-                }
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            VitalInputCard(
-                title = "Presión arterial",
-                subtitle = "Sistólica / diastólica",
-                icon = Icons.Default.MonitorHeart,
-                iconTint = Color(0xFF43A047),
-                value = pressure,
-                unit = "mmHg",
-                keyboardType = KeyboardType.Text,
-                onValueChange = { value ->
-                    if (value.all { it.isDigit() || it == '/' } || value.isBlank()) {
-                        pressure = value
-                    }
-                }
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Card temperatura
-            VitalInputCard(
-                title = "Temperatura corporal",
-                subtitle = "En grados Celsius",
-                icon = Icons.Default.Thermostat,
-                iconTint = Color(0xFFFFA000),
-                value = temperature,
-                unit = "°C",
-                keyboardType = KeyboardType.Number,
-                onValueChange = { value ->
-                    if (value.matches(Regex("""\d*\.?\d*""")) || value.isBlank()) {
-                        temperature = value
-                    }
-                },
-                showTrailingUnitChip = true
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = "Los valores mostrados son una referencia general y no sustituyen la evaluación médica.",
-                fontSize = 12.sp,
-                color = Color.Gray,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-        }
-    }
-}}
+    }}
 
 @Composable
 private fun SummaryCard(

@@ -18,8 +18,8 @@ class LoginDataSource {
             val url = URL(BuildConfig.USERS_URL+"/login")
             val connection = (url.openConnection() as HttpURLConnection).apply {
                 requestMethod = "POST"
-                connectTimeout = 5000
-                readTimeout = 5000
+                connectTimeout = 7000
+                readTimeout = 7000
                 doOutput = true
                 setRequestProperty("Content-Type", "application/json; charset=UTF-8")
             }
