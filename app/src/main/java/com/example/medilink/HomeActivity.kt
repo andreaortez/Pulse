@@ -10,6 +10,7 @@ import android.util.Log
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.cardview.widget.CardView
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -86,10 +87,11 @@ class HomeActivity : AppCompatActivity() {
         }
 
         //spinner
+        val spinnerAdultosCard = findViewById<androidx.cardview.widget.CardView>(R.id.spinnerAdultosCard)
         val spinnerAdultos = findViewById<android.widget.Spinner>(R.id.spinnerAdultos)
 
         if (!userType.contains("FAMILIAR", ignoreCase = true)) {
-            spinnerAdultos.visibility = View.GONE
+            spinnerAdultosCard.visibility = View.GONE
         }
 
         val rvDays = findViewById<RecyclerView>(R.id.rvDays)
@@ -134,7 +136,6 @@ class HomeActivity : AppCompatActivity() {
                     DateTimeFormatter.ofPattern("dd MMM", localeEs)
                 )
 
-                // 🔹 Actualizamos la fecha para el backend
                 selectedDateIso = selectedDate.format(DateTimeFormatter.ISO_LOCAL_DATE)
 
                 lifecycleScope.launch {
