@@ -24,7 +24,10 @@ import com.example.medilink.ui.theme.CelesteClaro
 data class Alert(
     val id: String,
     val mensaje: String,
-    val estado: String
+    val estado: String,
+    val adultoMayorId: String? = null,
+    val fechaHora: String? = null,
+    val tipoAlerta: String? = null,
 )
 
 @Composable
@@ -34,6 +37,11 @@ fun AlertCard(
     onMarkAsResolved: (String) -> Unit,
     onDismissRequest: () -> Unit,
 ) {
+    val titulo = when (alert.tipoAlerta?.uppercase()) {
+        "SIGNOS_VITALES" -> "Alerta de signos vitales"
+        else -> "Recordatorio de medicamento"
+    }
+
     AlertDialog(
         onDismissRequest = { onDismissRequest() },
         shape = RoundedCornerShape(24.dp),
@@ -61,7 +69,7 @@ fun AlertCard(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "Recordatorio de medicamento",
+                    text = titulo,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 18.sp,
                     textAlign = TextAlign.Center,
@@ -109,24 +117,26 @@ fun AlertCard(
                     .padding(horizontal = 8.dp, vertical = 4.dp),
                 horizontalArrangement = Arrangement.Center
             ) {
-                OutlinedButton(
-                    onClick = { onMarkAsResolved(alert.id) },
-                    shape = RoundedCornerShape(16.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = AzulOscuro
-                    ),
-                    border = ButtonDefaults.outlinedButtonBorder.copy(
-                        width = 1.dp,
-                        brush = androidx.compose.ui.graphics.SolidColor(AzulOscuro)
-                    )
-                ) {
-                    Text(
-                        text = "Resuelta",
-                        fontSize = 14.sp
-                    )
-                }
+                if(alert.tipoAlerta?.uppercase() != "SIGNOS_VITALES"){
+                    OutlinedButton(
+                        onClick = { onMarkAsResolved(alert.id) },
+                        shape = RoundedCornerShape(16.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = AzulOscuro
+                        ),
+                        border = ButtonDefaults.outlinedButtonBorder.copy(
+                            width = 1.dp,
+                            brush = androidx.compose.ui.graphics.SolidColor(AzulOscuro)
+                        )
+                    ) {
+                        Text(
+                            text = "Resuelta",
+                            fontSize = 14.sp
+                        )
+                    }
 
-                Spacer(modifier = Modifier.width(12.dp))
+                    Spacer(modifier = Modifier.width(12.dp))
+                }
 
                 Button(
                     onClick = { onMarkAsNotified(alert.id) },
@@ -171,7 +181,8 @@ fun AlertCardPreview() {
     val exampleAlert = Alert(
         id = "1",
         mensaje = "Te toca tomar Loratadina 10 mg.",
-        estado = "PENDIENTE"
+        estado = "PENDIENTE",
+        tipoAlerta = "SIGNOS_VITALES",
     )
 
     AlertsList(
