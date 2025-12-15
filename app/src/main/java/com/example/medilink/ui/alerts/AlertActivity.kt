@@ -13,6 +13,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.net.HttpURLConnection
 import java.net.URL
+import kotlin.String
 
 class AlertActivity : ComponentActivity() {
     private val alertsBaseUrl: String = BuildConfig.ALERTS_URL
@@ -25,13 +26,13 @@ class AlertActivity : ComponentActivity() {
         val alertId = intent.getStringExtra("alert_id") ?: ""
         val mensaje = intent.getStringExtra("alert_message") ?: "Es hora de tu medicamento"
         val estado = intent.getStringExtra("alert_state") ?: "PENDIENTE"
-
-        Log.d("AlertDebug", "AlertActivity datos: id=$alertId, msg=$mensaje")
+        val tipoAlerta = intent.getStringExtra("alert_type") ?: "MEDICACION"
 
         val alert = Alert(
             id = alertId,
             mensaje = mensaje,
-            estado = estado
+            estado = estado,
+            tipoAlerta = tipoAlerta,
         )
 
         setContent {

@@ -32,6 +32,7 @@ import com.example.medilink.ui.VitalSigns.VitalSignsActivity
 import org.json.JSONArray
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import com.example.medilink.ui.components.Alert
 
 data class AdultoVinculado(
     val id: String,
@@ -54,6 +55,7 @@ class HomeActivity : AppCompatActivity() {
     private lateinit var tvEmptyMedicines: TextView
     private lateinit var medsBaseUrl: String
     private lateinit var usersBaseUrl: String
+    private lateinit var alertsBaseUrl: String
     private var selectedDateIso: String = ""
 
     private var selectedAdultId: String? = null
@@ -68,6 +70,7 @@ class HomeActivity : AppCompatActivity() {
 
         medsBaseUrl = BuildConfig.MEDS_URL
         usersBaseUrl = BuildConfig.USERS_URL
+        alertsBaseUrl = BuildConfig.ALERTS_URL
 
         userType = SessionManager.getUserType(this) ?: ""
         userId = SessionManager.getUserId(this) ?: ""
@@ -376,6 +379,7 @@ class HomeActivity : AppCompatActivity() {
             lifecycleScope.launch {
                 val todayIso = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
 
+                //alertas de medicamentos
                 val alertsEndpoint = if (userType.contains("FAMILIAR", ignoreCase = true)) {
                     "$medsBaseUrl/for-today-familiar"
                 } else {
@@ -383,8 +387,22 @@ class HomeActivity : AppCompatActivity() {
                 }
 
                 val remindersToday = obtenerRecordatoriosHome(alertsEndpoint, userId, todayIso)
-                Log.d("HomeDebug", "[onResume] Reminders para alertas hoy: ${remindersToday.size}")
                 scheduleAlertsForToday(remindersToday)
+
+                //alertas de signos vitales
+                val endpoint = if (userType.contains("FAMILIAR", ignoreCase = true)) {
+                    "${BuildConfig.ALERTS_URL}/pending"
+                } else {
+                    "${BuildConfig.ALERTS_URL}/elder"
+                }
+
+                val alerts = fetchVitalAlerts(endpoint, userId)
+
+                val filtered = if (userType.contains("FAMILIAR", ignoreCase = true) && selectedAdultId != null) {
+                    alerts.filter { it.adultoMayorId == selectedAdultId }
+                } else alerts
+
+                scheduleApiAlerts(filtered)
             }
         }
     }
@@ -532,6 +550,58 @@ class HomeActivity : AppCompatActivity() {
         }
     }
 
+    @SuppressLint("ObsoleteSdkInt")
+    private fun scheduleApiAlerts(alerts: List<Alert>) {
+        val alarmManager = getSystemService(ALARM_SERVICE) as android.app.AlarmManager
+        val now = System.currentTimeMillis()
+
+        for (a in alerts) {
+            // solo pendientes
+            if (!a.estado.equals("PENDIENTE", ignoreCase = true)) continue
+
+            val triggerAtFromServer = parseIsoUtcToMillis(a.fechaHora)
+
+            // Si ya pasó, la tiramos “ya” (en 2s)
+            val triggerAt = if (triggerAtFromServer != null && triggerAtFromServer > now) {
+                triggerAtFromServer
+            } else {
+                now + 2000L
+            }
+
+            val intent = Intent(this, com.example.medilink.ui.alerts.MedAlertReceiver::class.java).apply {
+                putExtra("alert_id", a.id)
+                putExtra("alert_message", a.mensaje)
+                putExtra("alert_state", a.estado)
+                putExtra("alert_type", a.tipoAlerta ?: "SIGNOS_VITALES")
+            }
+
+            val pending = android.app.PendingIntent.getBroadcast(
+                this,
+                ("API_" + a.id).hashCode(),
+                intent,
+                android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
+            )
+
+            alarmManager.set(
+                android.app.AlarmManager.RTC_WAKEUP,
+                triggerAt,
+                pending
+            )
+        }
+    }
+
+    private fun parseIsoUtcToMillis(iso: String?): Long? {
+        if (iso.isNullOrBlank()) return null
+        return try {
+            // Ej: 2025-12-14T02:10:34.426Z
+            val sdf = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.US)
+            sdf.timeZone = java.util.TimeZone.getTimeZone("UTC")
+            sdf.parse(iso)?.time
+        } catch (e: Exception) {
+            null
+        }
+    }
+
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -594,7 +664,6 @@ suspend fun obtenerRecordatoriosHome(
                 !selectedLocalDate.isBefore(fechaInicio) &&
                         !selectedLocalDate.isAfter(fechaFin)
             } catch (e: Exception) {
-
                 true
             }
 
@@ -646,6 +715,56 @@ suspend fun obtenerRecordatoriosHome(
 
     resultado
 }
+
+suspend fun fetchVitalAlerts(
+    endpointUrl: String,
+    id: String
+): List<Alert> = withContext(Dispatchers.IO) {
+    val resultado = mutableListOf<Alert>()
+
+    try {
+        val url = URL("$endpointUrl/$id")
+        val conn = (url.openConnection() as HttpURLConnection).apply {
+            requestMethod = "GET"
+            connectTimeout = 10_000
+            readTimeout = 10_000
+        }
+
+        val code = conn.responseCode
+        if (code !in 200..299) {
+            val err = conn.errorStream?.bufferedReader()?.use { it.readText() }
+            Log.e("Alerts", "Error fetchVitalAlerts: $err")
+            conn.disconnect()
+            return@withContext emptyList<Alert>()
+        }
+
+        val text = conn.inputStream.bufferedReader().use { it.readText() }
+        conn.disconnect()
+
+        val arr = JSONArray(text)
+        for (i in 0 until arr.length()) {
+            val item = arr.getJSONObject(i)
+            val alertId = item.optString("_id", "")
+
+            if (alertId.isNotBlank()) {
+                resultado.add(
+                    Alert(
+                        id = alertId,
+                        mensaje = item.optString("mensaje", ""),
+                        estado = item.optString("estado", "PENDIENTE"),
+                        adultoMayorId = item.optString("adultoMayorId", null),
+                        fechaHora = item.optString("fechaHora", null)
+                    )
+                )
+            }
+        }
+    } catch (e: Exception) {
+        e.printStackTrace()
+    }
+
+    resultado
+}
+
 
 suspend fun deleteMedicine(
     medsBaseUrl: String,
