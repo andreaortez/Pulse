@@ -466,10 +466,13 @@ fun AddMedicineScreen(
             DatePickerRange(
                 startDateDisplay = startDateDisplay,
                 endDateDisplay = endDateDisplay
-            ) { startDisp, endDisp ->
+            ) { startDisp, endDisp, startBack, endBack ->
                 startDateDisplay = startDisp
                 endDateDisplay = endDisp
+                startDateBackend = startBack
+                endDateBackend = endBack
             }
+
 
             Text(
                 text = "Añadir Recordatorios",
