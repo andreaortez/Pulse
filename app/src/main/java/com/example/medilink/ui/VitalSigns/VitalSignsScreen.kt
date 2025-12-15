@@ -181,10 +181,8 @@ fun VitalSignsScreen(
                         Log.e("VitalSigns", "simulate failed", ex)
                     }
                 }
-                // IMPORTANTE: NO tocar hasPermissions aquí.
             }
 
-            // 2) Postear vitals al backend + cargar familiares
             withContext(Dispatchers.IO) {
                 runCatching {
                     val bodyJson = JSONObject().apply {
