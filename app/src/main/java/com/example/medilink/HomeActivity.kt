@@ -52,6 +52,7 @@ data class HomeReminder(
     val horasDelDia: List<String>
 )
 
+
 class HomeActivity : AppCompatActivity() {
     private lateinit var rvMedicines: RecyclerView
     private lateinit var tvEmptyMedicines: TextView
@@ -622,8 +623,7 @@ class HomeActivity : AppCompatActivity() {
 suspend fun obtenerRecordatoriosHome(
     endpointUrl: String,
     userId: String,
-    selectedDate: String,
-
+    selectedDate: String
 ): List<HomeReminder> = withContext(Dispatchers.IO) {
 
     val resultado = mutableListOf<HomeReminder>()
@@ -710,6 +710,7 @@ suspend fun obtenerRecordatoriosHome(
                     val fmt = SimpleDateFormat("h:mm a", Locale("es", "ES"))
                     val horaBonita = fmt.format(date!!).lowercase()
 
+
                     "A las $horaBonita"
                 } catch (e: Exception) {
                     e.printStackTrace()
@@ -726,13 +727,16 @@ suspend fun obtenerRecordatoriosHome(
                     usuarioId = usuarioId,
                     forma = forma,
                     cantidad = cantidad,
-                    horasDelDia = horasList,
-
                     fechaInicio = fechaInicioStr.take(10),
                     fechaFin = fechaFinStr.take(10),
-                    horas = horasList
+                    horas = horasList,
+
+                    horasDelDia = horasList,
+
+
                 )
             )
+
         }
     } catch (e: Exception) {
         e.printStackTrace()

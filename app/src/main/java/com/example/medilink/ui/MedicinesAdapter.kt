@@ -52,6 +52,9 @@ class MedicinesAdapter(
 
         holder.tvQuantity.text = "Cantidad: ${item.quantity}"
 
+
+
+
         holder.btnEdit.setOnClickListener {
             onEditClick(item)
         }
